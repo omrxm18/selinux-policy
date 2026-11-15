@@ -203,6 +203,11 @@ allow staff_systemd_t xdg_downloads_t:file { getattr open read };
 allow staff_systemd_t lib_t:file execute_no_trans;
 allow staff_systemd_t cert_t:dir search;
 allow staff_systemd_t cert_t:file { getattr open read };
+allow staff_systemd_t xdg_cache_t:file { link setattr };
+allow staff_systemd_t accountsd_var_lib_t:dir { read getattr search };
+allow staff_systemd_t systemd_user_tmpfs_t:file execmod;
+allow staff_systemd_t dma_device_t:chr_file { read write };
+allow staff_systemd_t etc_t:file watch;
 
 # fonts, shared libraries, and the Wayland session
 allow staff_systemd_t { fonts_t fonts_cache_t }:dir { getattr open read search };
