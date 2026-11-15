@@ -1,0 +1,398 @@
+module extensions 1.0;
+
+require {
+    type auditd_t;
+    type bluetooth_t;
+    type cupsd_t;
+    type dnsmasq_t;
+    type gpg_t;
+    type ifconfig_t;
+    type init_t;
+    type initrc_t;
+    type kmod_t;
+    type ntpd_t;
+    type pipewire_t;
+    type plymouth_t;
+    type policykit_t;
+    type semanage_t;
+    type staff_dbusd_t;
+    type staff_systemd_t;
+    type staff_t;
+    type sysadm_t;
+    type syslogd_t;
+    type systemd_hostnamed_t;
+    type systemd_locale_t;
+    type systemd_logind_t;
+    type systemd_machined_t;
+    type systemd_pcrphase_t;
+    type systemd_tmpfiles_t;
+    type systemd_user_runtime_dir_t;
+    type systemd_userdbd_t;
+    type udev_t;
+    type utempter_t;
+    type alsa_var_lib_t;
+    type auditd_etc_t;
+    type autofs_t;
+    type bin_t;
+    type binfmt_misc_fs_t;
+    type boot_t;
+    type bpf_t;
+    type cert_t;
+    type cgroup_t;
+    type chkpwd_t;
+    type chromium_xdg_config_t;
+    type configfs_t;
+    type container_conf_home_t;
+    type container_runtime_t;
+    type debugfs_t;
+    type device_t;
+    type devpts_t;
+    type efivarfs_t;
+    type etc_runtime_t;
+    type evolution_xdg_config_t;
+    type exports_t;
+    type fonts_t;
+    type fuse_device_t;
+    type fusefs_t;
+    type git_xdg_config_t;
+    type gnome_xdg_config_t;
+    type gnome_xdg_data_t;
+    type gpg_agent_tmp_t;
+    type gpg_runtime_t;
+    type gpg_secret_t;
+    type gpg_pinentry_t;
+    type staff_wm_t;
+    type home_root_t;
+    type http_port_t;
+    type hugetlbfs_t;
+    type i2c_device_t;
+    type init_var_lib_t;
+    type initrc_runtime_t;
+    type java_home_t;
+    type krb5_conf_t;
+    type mesa_shader_cache_t;
+    type mnt_t;
+    type mount_exec_t;
+    type mount_runtime_t;
+    type mozilla_home_t;
+    type mozilla_xdg_cache_t;
+    type mplayer_xdg_config_t;
+    type mplayer_xdg_data_t;
+    type net_conf_t;
+    type nsfs_t;
+    type pstore_t;
+    type pulseaudio_tmp_t;
+    type pulseaudio_xdg_config_t;
+    type restorecond_exec_t;
+    type root_t;
+    type samba_etc_t;
+    type samba_net_exec_t;
+    type samba_var_t;
+    type selinux_config_t;
+    type shadow_t;
+    type ssh_home_t;
+    type staff_sudo_t;
+    type swapfile_t;
+    type sysctl_net_t;
+    type syslogd_runtime_t;
+    type systemd_coredump_var_lib_t;
+    type systemd_journal_t;
+    type systemd_logind_inhibit_runtime_t;
+    type systemd_logind_runtime_t;
+    type systemd_machined_runtime_t;
+    type systemd_unit_t;
+    type systemd_user_runtime_t;
+    type systemd_user_tmpfs_t;
+    type systemd_userdbd_runtime_t;
+    type tmp_t;
+    type tmpfs_t;
+    type tracefs_t;
+    type udev_runtime_t;
+    type user_cert_t;
+    type user_home_dir_t;
+    type user_home_t;
+    type user_runtime_t;
+    type usr_t;
+    type utempter_exec_t;
+    type var_lib_t;
+    type var_log_t;
+    type virt_var_lib_t;
+    type wm_tmpfs_t;
+    type xdg_cache_t;
+    type xdg_config_t;
+    type xdg_data_t;
+    type xdg_pictures_t;
+    type systemd_user_unit_t;
+    type default_t;
+    type git_home_t;
+    type kmod_t;
+
+    class capability setuid;
+    class capability2 { checkpoint_restore perfmon };
+    class chr_file { getattr ioctl lock open read write };
+    class dir { add_name create getattr ioctl mounton open read remove_name rmdir search watch write };
+    class fd use;
+    class service status;
+    class capability2 perfmon;
+    class system { start status };
+    class service { start status };
+    class fifo_file { getattr write };
+    class file { create entrypoint execute execute_no_trans getattr ioctl link lock map open read rename setattr unlink watch write };
+    class filesystem { getattr mount quotaget quotamod };
+    class lnk_file { getattr read };
+    class netlink_route_socket { read write };
+    class process { execmem setsched transition };
+    class shm { create destroy read unix_read };
+    class sock_file { create getattr read unlink write };
+    class tcp_socket { connect create getattr getopt name_connect read setopt write };
+    class unix_stream_socket { bind connectto create getattr ioctl listen read setattr setopt write };
+}
+
+#============= auditd_t ==============
+allow auditd_t systemd_machined_t:unix_stream_socket connectto;
+allow auditd_t systemd_userdbd_runtime_t:sock_file read;
+
+#============= bluetooth_t ==============
+allow bluetooth_t udev_runtime_t:dir search;
+allow bluetooth_t udev_runtime_t:lnk_file read;
+
+#============= cupsd_t ==============
+allow cupsd_t systemd_machined_t:unix_stream_socket connectto;
+allow cupsd_t systemd_userdbd_runtime_t:sock_file read;
+
+#============= dnsmasq_t ==============
+allow dnsmasq_t container_runtime_t:dir { add_name search write };
+allow dnsmasq_t container_runtime_t:file { create open setattr write };
+allow dnsmasq_t systemd_machined_t:unix_stream_socket connectto;
+allow dnsmasq_t systemd_userdbd_runtime_t:sock_file read;
+
+#============= gpg_t ==============
+allow gpg_t tmp_t:file { open read };
+
+#============= ifconfig_t ==============
+allow ifconfig_t selinux_config_t:lnk_file read;
+
+#============= init_t ==============
+allow init_t self:capability2 checkpoint_restore;
+allow init_t self:process execmem;
+
+#============= initrc_t ==============
+allow initrc_t self:process execmem;
+allow initrc_t sysadm_t:process transition;
+
+#============= kmod_t ==============
+allow kmod_t initrc_runtime_t:file { read write };
+
+#============= ntpd_t ==============
+allow ntpd_t sysctl_net_t:dir search;
+allow ntpd_t sysctl_net_t:file { getattr open read };
+
+#============= pipewire_t ==============
+allow pipewire_t alsa_var_lib_t:dir search;
+allow pipewire_t pulseaudio_tmp_t:dir { add_name write };
+allow pipewire_t pulseaudio_tmp_t:file { create getattr open write };
+allow pipewire_t selinux_config_t:lnk_file read;
+
+#============= plymouth_t ==============
+allow plymouth_t init_t:unix_stream_socket connectto;
+
+#============= policykit_t ==============
+allow policykit_t selinux_config_t:lnk_file read;
+allow policykit_t systemd_userdbd_runtime_t:sock_file read;
+
+#============= semanage_t ==============
+allow semanage_t staff_t:fifo_file { getattr write };
+
+#============== staff_dbusd_t ==============
+allow staff_dbusd_t xdg_data_t:dir watch;
+allow staff_dbusd_t systemd_user_unit_t:service status;
+allow staff_dbusd_t staff_systemd_t:system { start status };
+allow staff_dbusd_t systemd_user_unit_t:service { start status };
+
+#============== gpg_* ==============
+allow gpg_t self:unix_stream_socket connectto;
+allow gpg_pinentry_t staff_wm_t:unix_stream_socket connectto;
+allow gpg_pinentry_t gpg_t:dir search;
+allow gpg_pinentry_t xdg_config_t:file { getattr open read };
+allow gpg_pinentry_t user_home_t:lnk_file read;
+allow gpg_pinentry_t user_home_t:dir search;
+allow gpg_pinentry_t self:process execmem;
+
+#============== staff_systemd_t ==============
+allow staff_systemd_t autofs_t:filesystem getattr;
+allow staff_systemd_t binfmt_misc_fs_t:dir getattr;
+allow staff_systemd_t binfmt_misc_fs_t:filesystem getattr;
+allow staff_systemd_t boot_t:dir getattr;
+allow staff_systemd_t bpf_t:dir getattr;
+allow staff_systemd_t bpf_t:filesystem getattr;
+allow staff_systemd_t cert_t:lnk_file read;
+allow staff_systemd_t chkpwd_t:dir search;
+allow staff_systemd_t chkpwd_t:file { getattr ioctl open read };
+allow staff_systemd_t chromium_xdg_config_t:dir getattr;
+allow staff_systemd_t configfs_t:dir getattr;
+allow staff_systemd_t configfs_t:filesystem getattr;
+allow staff_systemd_t container_conf_home_t:dir { getattr read };
+allow staff_systemd_t debugfs_t:dir getattr;
+allow staff_systemd_t debugfs_t:filesystem getattr;
+allow staff_systemd_t device_t:filesystem getattr;
+allow staff_systemd_t devpts_t:dir getattr;
+allow staff_systemd_t devpts_t:filesystem getattr;
+allow staff_systemd_t efivarfs_t:filesystem getattr;
+allow staff_systemd_t etc_runtime_t:file { getattr open read };
+allow staff_systemd_t evolution_xdg_config_t:dir getattr;
+allow staff_systemd_t exports_t:file { getattr open read watch };
+allow staff_systemd_t fonts_t:dir watch;
+allow staff_systemd_t fuse_device_t:chr_file { open read write };
+allow staff_systemd_t fusefs_t:dir { getattr open read };
+allow staff_systemd_t fusefs_t:filesystem { getattr mount };
+allow staff_systemd_t git_xdg_config_t:file { getattr read };
+allow staff_systemd_t gnome_xdg_config_t:dir { getattr read search watch };
+allow staff_systemd_t gnome_xdg_config_t:file { getattr map open read };
+allow staff_systemd_t gnome_xdg_data_t:dir getattr;
+allow staff_systemd_t gpg_agent_tmp_t:file unlink;
+allow staff_systemd_t gpg_runtime_t:dir { add_name create write };
+allow staff_systemd_t gpg_runtime_t:sock_file { create getattr write };
+allow staff_systemd_t gpg_secret_t:dir read;
+allow staff_systemd_t gpg_t:unix_stream_socket { bind create listen setopt };
+allow staff_systemd_t home_root_t:dir { read watch };
+allow staff_systemd_t http_port_t:tcp_socket name_connect;
+allow staff_systemd_t hugetlbfs_t:dir getattr;
+allow staff_systemd_t hugetlbfs_t:filesystem getattr;
+allow staff_systemd_t i2c_device_t:chr_file { getattr ioctl lock open read write };
+allow staff_systemd_t init_var_lib_t:dir search;
+allow staff_systemd_t java_home_t:dir { getattr read };
+allow staff_systemd_t krb5_conf_t:file { getattr open read };
+allow staff_systemd_t mesa_shader_cache_t:dir getattr;
+allow staff_systemd_t mnt_t:dir { getattr ioctl open read watch };
+allow staff_systemd_t mount_exec_t:file { execute execute_no_trans map open read };
+allow staff_systemd_t mount_runtime_t:file write;
+allow staff_systemd_t mozilla_home_t:dir { getattr read };
+allow staff_systemd_t mozilla_xdg_cache_t:dir getattr;
+allow staff_systemd_t mplayer_xdg_config_t:dir getattr;
+allow staff_systemd_t mplayer_xdg_data_t:dir getattr;
+allow staff_systemd_t net_conf_t:file { getattr open read };
+allow staff_systemd_t pstore_t:dir getattr;
+allow staff_systemd_t pstore_t:filesystem getattr;
+allow staff_systemd_t pulseaudio_xdg_config_t:dir { getattr search };
+allow staff_systemd_t pulseaudio_xdg_config_t:file { lock open read };
+allow staff_systemd_t restorecond_exec_t:file { execute execute_no_trans map open read };
+allow staff_systemd_t root_t:dir watch;
+allow staff_systemd_t samba_etc_t:dir search;
+allow staff_systemd_t samba_etc_t:file { getattr open read };
+allow staff_systemd_t samba_net_exec_t:file { execute execute_no_trans map open read };
+allow staff_systemd_t samba_var_t:dir { getattr search };
+allow staff_systemd_t self:capability setuid;
+allow staff_systemd_t self:process { execmem setsched };
+allow staff_systemd_t self:shm { create destroy read unix_read };
+allow staff_systemd_t self:tcp_socket { connect create getattr getopt read setopt write };
+allow staff_systemd_t self:unix_stream_socket connectto;
+allow staff_systemd_t selinux_config_t:file watch;
+allow staff_systemd_t ssh_home_t:dir { getattr read };
+allow staff_systemd_t staff_sudo_t:dir search;
+allow staff_systemd_t staff_sudo_t:file { getattr ioctl open read };
+allow staff_systemd_t staff_t:fd use;
+allow staff_systemd_t staff_t:fifo_file write;
+allow staff_systemd_t staff_t:unix_stream_socket { read setattr };
+allow staff_systemd_t swapfile_t:file getattr;
+allow staff_systemd_t sysadm_t:dir search;
+allow staff_systemd_t sysadm_t:file { getattr ioctl open read };
+allow staff_systemd_t sysctl_net_t:dir search;
+allow staff_systemd_t sysctl_net_t:file { getattr open read };
+allow staff_systemd_t systemd_coredump_var_lib_t:dir search;
+allow staff_systemd_t systemd_journal_t:dir { getattr open read search watch };
+allow staff_systemd_t systemd_journal_t:file { getattr map open read };
+allow staff_systemd_t systemd_logind_inhibit_runtime_t:fifo_file write;
+allow staff_systemd_t systemd_logind_runtime_t:dir search;
+allow staff_systemd_t systemd_logind_runtime_t:file { getattr open read };
+allow staff_systemd_t systemd_logind_t:fd use;
+allow staff_systemd_t systemd_machined_runtime_t:dir search;
+allow staff_systemd_t systemd_machined_t:unix_stream_socket connectto;
+allow staff_systemd_t systemd_user_runtime_t:dir mounton;
+allow staff_systemd_t systemd_user_runtime_t:file map;
+allow staff_systemd_t systemd_user_tmpfs_t:file map;
+allow staff_systemd_t systemd_userdbd_runtime_t:dir { getattr open read search };
+allow staff_systemd_t systemd_userdbd_runtime_t:lnk_file read;
+allow staff_systemd_t systemd_userdbd_runtime_t:sock_file { getattr read write };
+allow staff_systemd_t systemd_userdbd_t:unix_stream_socket connectto;
+allow staff_systemd_t tmp_t:dir { add_name create read remove_name rmdir write };
+allow staff_systemd_t tmp_t:file { create getattr open unlink write };
+allow staff_systemd_t tracefs_t:dir getattr;
+allow staff_systemd_t tracefs_t:filesystem getattr;
+allow staff_systemd_t user_cert_t:dir { getattr read };
+allow staff_systemd_t user_home_dir_t:dir { read watch };
+allow staff_systemd_t user_home_t:file write;
+allow staff_systemd_t user_runtime_t:dir watch;
+allow staff_systemd_t user_runtime_t:file { link open read unlink write };
+allow staff_systemd_t user_runtime_t:sock_file unlink;
+allow staff_systemd_t usr_t:dir watch;
+allow staff_systemd_t usr_t:file { getattr open read };
+allow staff_systemd_t usr_t:lnk_file read;
+allow staff_systemd_t var_lib_t:dir { read watch };
+allow staff_systemd_t var_lib_t:file { getattr open read };
+allow staff_systemd_t var_lib_t:lnk_file { getattr read };
+allow staff_systemd_t var_log_t:dir search;
+allow staff_systemd_t wm_tmpfs_t:file { read write };
+allow staff_systemd_t xdg_cache_t:dir { add_name remove_name watch write };
+allow staff_systemd_t xdg_cache_t:file { create rename unlink write };
+allow staff_systemd_t xdg_config_t:dir watch;
+allow staff_systemd_t xdg_config_t:file { create link rename setattr unlink watch write };
+allow staff_systemd_t xdg_data_t:dir watch;
+allow staff_systemd_t xdg_data_t:file { create link rename setattr unlink watch write };
+allow staff_systemd_t xdg_pictures_t:file { getattr open read };
+
+#============= sysadm_t ==============
+allow sysadm_t self:process execmem;
+allow sysadm_t staff_dbusd_t:unix_stream_socket connectto;
+allow sysadm_t usr_t:file entrypoint;
+
+#============= syslogd_t ==============
+allow syslogd_t systemd_unit_t:dir search;
+allow syslogd_t systemd_unit_t:lnk_file read;
+
+#============= systemd_hostnamed_t ==============
+allow systemd_hostnamed_t cgroup_t:file { getattr open read write };
+
+#============= systemd_locale_t ==============
+allow systemd_locale_t usr_t:file map;
+
+#============= systemd_logind_t ==============
+allow systemd_logind_t cgroup_t:file write;
+
+#============= systemd_machined_t ==============
+allow systemd_machined_t cgroup_t:file { getattr open read write };
+allow systemd_machined_t selinux_config_t:lnk_file read;
+
+#============= systemd_pcrphase_t ==============
+allow systemd_pcrphase_t nsfs_t:file getattr;
+allow systemd_pcrphase_t systemd_userdbd_runtime_t:dir search;
+allow systemd_pcrphase_t systemd_userdbd_runtime_t:sock_file write;
+allow systemd_pcrphase_t systemd_userdbd_t:unix_stream_socket connectto;
+
+#============= systemd_tmpfiles_t ==============
+allow systemd_tmpfiles_t auditd_etc_t:dir search;
+allow systemd_tmpfiles_t auditd_etc_t:file getattr;
+allow systemd_tmpfiles_t bin_t:dir search;
+allow systemd_tmpfiles_t bin_t:file getattr;
+allow systemd_tmpfiles_t bin_t:lnk_file { getattr read };
+allow systemd_tmpfiles_t shadow_t:file getattr;
+allow systemd_tmpfiles_t syslogd_runtime_t:sock_file getattr;
+allow systemd_tmpfiles_t systemd_machined_t:unix_stream_socket connectto;
+allow systemd_tmpfiles_t systemd_userdbd_runtime_t:sock_file read;
+allow systemd_tmpfiles_t tmpfs_t:lnk_file { getattr read };
+allow systemd_tmpfiles_t utempter_exec_t:file getattr;
+allow systemd_tmpfiles_t virt_var_lib_t:dir search;
+allow systemd_tmpfiles_t default_t:dir { open read search };
+allow systemd_tmpfiles_t default_t:lnk_file { getattr read };
+
+#============= systemd_user_runtime_dir_t ==============
+allow systemd_user_runtime_dir_t tmpfs_t:filesystem { quotaget quotamod };
+
+#============= udev_t ==============
+allow udev_t self:capability2 perfmon;
+
+#============= utempter_t ==============
+allow utempter_t staff_systemd_t:fd use;
+allow utempter_t staff_systemd_t:unix_stream_socket { getattr read write };
+
+#============= kmod_t ==============
+allow kmod_t self:capability2 perfmon;
