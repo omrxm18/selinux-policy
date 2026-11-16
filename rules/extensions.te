@@ -331,7 +331,6 @@ allow staff_systemd_t var_lib_t:dir { read watch };
 allow staff_systemd_t var_lib_t:file { getattr open read };
 allow staff_systemd_t var_lib_t:lnk_file { getattr read };
 allow staff_systemd_t var_log_t:dir search;
-allow staff_systemd_t wm_tmpfs_t:file { read write };
 allow staff_systemd_t xdg_cache_t:dir { add_name remove_name watch write };
 allow staff_systemd_t xdg_cache_t:file { create rename unlink write };
 allow staff_systemd_t xdg_config_t:dir watch;

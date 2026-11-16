@@ -1,49 +1,27 @@
-module mozilla_custom 1.0;
+policy_module(mozilla_custom, 1.0)
 
-require {
-    type mozilla_t;
-    type mozilla_tmpfs_t;
+gen_require(`
+	type mozilla_t;
+	type proc_psi_t;
+	type gnome_xdg_config_t;
+	type systemd_user_runtime_t;
+	type systemd_machined_runtime_t;
+	type user_runtime_t;
+	type var_lib_t;
+	type xdg_config_t, xdg_data_t;
+	class process getcap;
+')
 
-    type gnome_xdg_config_t;
+fs_search_cgroup_dirs(mozilla_t)
+fs_read_cgroup_files(mozilla_t)
+libs_exec_lib_files(mozilla_t)
+init_dgram_send(mozilla_t)
+seutil_read_config(mozilla_t)
 
-    type init_t;
-    type lib_t;
-    type cgroup_t;
-    type var_run_t;
-    type var_lib_t;
-    type proc_psi_t;
-
-    type selinux_config_t;
-    type user_runtime_t;
-
-    type xdg_config_t;
-    type xdg_data_t;
-
-    type systemd_machined_runtime_t;
-    type systemd_user_runtime_t;
-
-    class file {
-		create getattr link ioctl lock map open
-		read rename setattr unlink watch write execmod
-        execute_no_trans
-	};
-
-    class dir { search watch read getattr };
-    class unix_dgram_socket sendto;
-    class process { execmem getcap };
-    class lnk_file { getattr read };
-    class sock_file { create unlink write };
-}
-
-allow mozilla_t cgroup_t:dir search;
-allow mozilla_t cgroup_t:file { getattr open read };
 allow mozilla_t gnome_xdg_config_t:dir { read search watch };
 allow mozilla_t gnome_xdg_config_t:file { getattr map open read };
-allow mozilla_t init_t:unix_dgram_socket sendto;
 allow mozilla_t proc_psi_t:dir search;
 allow mozilla_t proc_psi_t:file { getattr open read };
-allow mozilla_t self:process { execmem getcap };
-allow mozilla_t selinux_config_t:lnk_file read;
 allow mozilla_t systemd_machined_runtime_t:dir search;
 allow mozilla_t systemd_user_runtime_t:dir { getattr search };
 allow mozilla_t systemd_user_runtime_t:file { map open read write };
@@ -51,4 +29,5 @@ allow mozilla_t user_runtime_t:sock_file { create unlink write };
 allow mozilla_t var_lib_t:dir watch;
 allow mozilla_t var_lib_t:file map;
 allow mozilla_t { xdg_config_t xdg_data_t }:dir watch;
-allow mozilla_t lib_t:file execute_no_trans;
+
+allow mozilla_t self:process getcap;

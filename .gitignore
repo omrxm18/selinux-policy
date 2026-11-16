@@ -1,2 +1,4 @@
 out/
-mods/
+tmp/
+rules/*.if
+rules/*.fc

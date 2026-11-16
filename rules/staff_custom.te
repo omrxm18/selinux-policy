@@ -1,6 +1,6 @@
-module staff_custom 1.0;
+policy_module(staff_custom, 1.0)
 
-require {
+gen_require(`
 	type staff_t;
 	type staff_wm_t;
 	type staff_sudo_t;
@@ -48,9 +48,6 @@ require {
 	type ld_so_cache_t;
 	type ldconfig_cache_t;
 
-	type fonts_cache_t;
-	type fonts_t;
-
 	type locale_t;
 
 	type selinux_config_t;
@@ -64,6 +61,7 @@ require {
 
 	type devlog_t;
 	type init_runtime_t;
+	type bluetooth_t;
 	type user_tmpfs_t;
 	type accountsd_var_lib_t;
 	type security_t;
@@ -94,7 +92,6 @@ require {
 	type device_t;
 	type dma_device_t;
 	type dri_device_t;
-	type proc_psi_t;
 	type v4l_device_t;
 
 	class chr_file {
@@ -132,11 +129,11 @@ require {
 	class security { read_policy setenforce };
 	class tcp_socket { node_bind name_bind };
 	class udp_socket { name_bind };
-	class capability { sys_nice net_admin chown dac_override kill setgid setuid ptrace };
+	class capability { sys_nice net_admin chown dac_override kill setgid setuid };
 	class lnk_file { getattr read  watch create setattr };
 	class process { execmem getcap ptrace transition sigchld };
 	class shm { associate getattr read unix_read unix_write write };
-}
+')
 
 allow staff_wm_t xdg_data_t:dir { add_name getattr open read remove_name search write };
 allow staff_wm_t xdg_data_t:file { create getattr link lock map open read rename setattr unlink write };
@@ -190,6 +187,7 @@ allow wireplumber_t user_home_t:lnk_file read;
 allow wireplumber_t init_t:unix_dgram_socket sendto;
 allow wireplumber_t selinux_config_t:lnk_file read;
 allow wireplumber_t v4l_device_t:chr_file { getattr ioctl open read write };
+allow wireplumber_t bluetooth_t:fd use;
 
 allowxperm { staff_t staff_systemd_t staff_wm_t } dri_device_t:chr_file ioctl { 0x6400-0x64ff };
 
@@ -210,13 +208,14 @@ allow staff_systemd_t dma_device_t:chr_file { read write };
 allow staff_systemd_t etc_t:file watch;
 
 # fonts, shared libraries, and the Wayland session
-allow staff_systemd_t { fonts_t fonts_cache_t }:dir { getattr open read search };
+miscfiles_read_fonts(staff_systemd_t)
+wayland_stream_connect(staff_systemd_t)
+allow staff_systemd_t { fonts_t fonts_cache_t }:dir { getattr open };
 allow staff_systemd_t fonts_cache_t:file { getattr map open read };
 allow staff_systemd_t usr_t:file map;
 allow staff_systemd_t mnt_t:dir search;
 allow staff_systemd_t var_run_t:dir watch;
-allow staff_systemd_t wayland_runtime_t:sock_file write;
-allow staff_systemd_t wm_tmpfs_t:file map;
+allow staff_systemd_t wm_tmpfs_t:file { map read write };
 
 #================ staff_sudo_t ================
 # sudo looking up users through systemd-userdbd
@@ -266,15 +265,12 @@ allow staff_t bin_t:file { create setattr unlink write };
 allow staff_t default_t:dir watch;
 allow staff_t default_t:lnk_file watch;
 allow staff_t dma_device_t:chr_file open;
-allow staff_t etc_t:dir { add_name remove_name write };
-allow staff_t etc_t:file { create rename setattr write };
 allow staff_t git_home_t:dir watch;
 allow staff_t init_t:system start;
 allow staff_t ld_so_cache_t:file unlink;
 allow staff_t ldconfig_cache_t:dir { add_name remove_name write };
 allow staff_t ldconfig_cache_t:file { create map open read rename unlink write };
 allow staff_t lib_t:dir { add_name create remove_name setattr write };
-allow staff_t lib_t:file { create setattr unlink write };
 allow staff_t lib_t:lnk_file { create setattr };
 allow staff_t locale_t:dir watch;
 allow staff_t locale_t:file watch;
@@ -284,10 +280,7 @@ allow staff_t mnt_t:dir write;
 allow staff_t self:cap_userns { sys_admin sys_chroot };
 allow staff_t self:capability { chown dac_override kill setgid setuid };
 allow staff_t self:io_uring allowed;
-allow staff_t self:process ptrace;
 allow staff_t self:user_namespace create;
-allow staff_t semanage_store_t:dir { add_name remove_name write };
-allow staff_t semanage_store_t:file { create open read rename setattr write };
 allow staff_t ssh_home_t:file watch;
 allow staff_t sysctl_vm_t:file { getattr open read };
 allow staff_t systemd_user_runtime_t:file map;
@@ -329,4 +322,4 @@ allow gpg_t staff_git_t:fd use;
 allow gpg_t staff_git_t:fifo_file { getattr read write };
 allow gpg_t staff_git_t:process sigchld;
 allow staff_git_t gpg_runtime_t:dir getattr;
-allowxperm gpg_t staff_git_t:fifo_file ioctl 0x542a; 
+allowxperm gpg_t staff_git_t:fifo_file ioctl 0x542a;
