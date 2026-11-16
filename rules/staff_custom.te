@@ -37,8 +37,6 @@ gen_require(`
 	type boolean_t;
 	type man_t;
 
-	type semanage_store_t;
-
 	type wm_tmpfs_t;
 	type user_tmp_t;
 	type xdm_tmp_t;
@@ -121,7 +119,6 @@ gen_require(`
 	class unix_dgram_socket sendto;
 
 	class fifo_file { write getattr read ioctl };
-	class dir { search create setattr create };
 	class cap_userns { sys_admin sys_chroot };
 	class netlink_route_socket { read write };
 	class unix_stream_socket { connectto getattr ioctl read write };
@@ -211,7 +208,6 @@ allow staff_systemd_t etc_t:file watch;
 miscfiles_read_fonts(staff_systemd_t)
 wayland_stream_connect(staff_systemd_t)
 allow staff_systemd_t { fonts_t fonts_cache_t }:dir { getattr open };
-allow staff_systemd_t fonts_cache_t:file { getattr map open read };
 allow staff_systemd_t usr_t:file map;
 allow staff_systemd_t mnt_t:dir search;
 allow staff_systemd_t var_run_t:dir watch;
