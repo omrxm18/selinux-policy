@@ -3,13 +3,31 @@ policy_module(mozilla_custom, 1.0)
 gen_require(`
 	type mozilla_t;
 	type proc_psi_t;
-	type gnome_xdg_config_t;
 	type systemd_user_runtime_t;
 	type systemd_machined_runtime_t;
 	type user_runtime_t;
 	type var_lib_t;
-	type xdg_config_t, xdg_data_t;
-	class process getcap;
+	type gnome_xdg_config_t, xdg_config_t, xdg_data_t;
+
+	type devpts_t;
+	type device_t;
+	type etc_t;
+	type fs_t;
+	type nsfs_t;
+	type cgroup_t;
+	type root_t;
+	type sysctl_t;
+	type systemd_machined_t;
+	type tmp_t, tmpfs_t;
+	type mozilla_tmpfs_t;
+
+	class cap_userns { net_admin setpcap };
+	class dir { create mounton };
+	class file { getattr map mounton open read };
+	class filesystem { mount unmount };
+	class netlink_route_socket nlmsg_write;
+	class process { execmem getcap ptrace };
+	class unix_stream_socket connectto;
 ')
 
 fs_search_cgroup_dirs(mozilla_t)
@@ -29,5 +47,36 @@ allow mozilla_t user_runtime_t:sock_file { create unlink write };
 allow mozilla_t var_lib_t:dir watch;
 allow mozilla_t var_lib_t:file map;
 allow mozilla_t { xdg_config_t xdg_data_t }:dir watch;
+allow mozilla_t device_t:dir watch;
+allow mozilla_t cgroup_t:file { getattr open read };
+allow mozilla_t cgroup_t:dir search;
+allow mozilla_t bubblewrap_exec_t:file { execute execute_no_trans map open read };
 
-allow mozilla_t self:process getcap;
+# JIT and crash reporter memory access.
+allow mozilla_t self:process { execmem ptrace };
+
+# The crash reporter re-executes itself through bubblewrap
+# (--unshare-all).  Allow that self-sandbox with the specific
+# namespace and mount operations it uses.
+bubblewrap_exec(mozilla_t)
+allow mozilla_t self:cap_userns { net_admin setpcap };
+allow mozilla_t self:netlink_route_socket nlmsg_write;
+allow mozilla_t tmpfs_t:filesystem { mount unmount };
+allow mozilla_t tmpfs_t:dir { create mounton };
+allow mozilla_t devpts_t:filesystem mount;
+allow mozilla_t fs_t:filesystem unmount;
+allow mozilla_t root_t:dir mounton;
+allow mozilla_t tmp_t:dir mounton;
+allow mozilla_t nsfs_t:file getattr;
+allow mozilla_t sysctl_t:file { getattr open read };
+allow mozilla_t mozilla_tmpfs_t:file mounton;
+
+# p11-kit CA trust store (mapped by Firefox, e.g. NSS module).
+allow mozilla_t etc_t:file map;
+
+allow mozilla_t gnome_xdg_config_t:dir search;
+allow mozilla_t gnome_xdg_config_t:file { getattr open read };
+allow mozilla_t gnome_xdg_config_t:file map;
+
+# Userdb lookup used by the crash reporter.
+systemd_connect_machined(mozilla_t)

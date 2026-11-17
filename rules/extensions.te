@@ -1,18 +1,22 @@
-module extensions 1.0;
+policy_module(extensions, 1.0)
 
-require {
+gen_require(`
     type auditd_t;
     type bluetooth_t;
     type cupsd_t;
+    type devicekit_disk_t;
     type dnsmasq_t;
     type gpg_t;
     type ifconfig_t;
     type init_t;
     type initrc_t;
     type kmod_t;
+    type lvm_t;
+    type NetworkManager_t;
     type ntpd_t;
     type pipewire_t;
     type plymouth_t;
+    type plymouthd_t;
     type policykit_t;
     type semanage_t;
     type staff_dbusd_t;
@@ -20,10 +24,14 @@ require {
     type staff_t;
     type sysadm_t;
     type syslogd_t;
+    type system_dbusd_t;
+    type systemd_coredump_t;
+    type systemd_generator_t;
     type systemd_hostnamed_t;
     type systemd_locale_t;
     type systemd_logind_t;
     type systemd_machined_t;
+    type systemd_modules_load_t;
     type systemd_pcrphase_t;
     type systemd_tmpfiles_t;
     type systemd_user_runtime_dir_t;
@@ -125,28 +133,27 @@ require {
     type systemd_user_unit_t;
     type default_t;
     type git_home_t;
-    type kmod_t;
 
     class capability setuid;
     class capability2 { checkpoint_restore perfmon };
     class chr_file { getattr ioctl lock open read write };
-    class dir { add_name create getattr ioctl mounton open read remove_name rmdir search watch write };
+    class dir { add_name create getattr ioctl lock mounton open read remove_name rmdir search watch write };
     class fd use;
-    class service status;
-    class capability2 perfmon;
     class system { start status };
     class service { start status };
     class fifo_file { getattr write };
-    class file { create entrypoint execute execute_no_trans getattr ioctl link lock map open read rename setattr unlink watch write };
+    class dbus send_msg;
+    class file { create entrypoint execute execute_no_trans getattr ioctl link lock map open read rename setattr unlink watch write relabelfrom relabelto };
     class filesystem { getattr mount quotaget quotamod };
     class lnk_file { getattr read };
     class netlink_route_socket { read write };
+    class netlink_kobject_uevent_socket { getattr read write setopt getopt bind create };
     class process { execmem setsched transition };
     class shm { create destroy read unix_read };
     class sock_file { create getattr read unlink write };
     class tcp_socket { connect create getattr getopt name_connect read setopt write };
     class unix_stream_socket { bind connectto create getattr ioctl listen read setattr setopt write };
-}
+')
 
 #============= auditd_t ==============
 allow auditd_t systemd_machined_t:unix_stream_socket connectto;
@@ -155,6 +162,7 @@ allow auditd_t systemd_userdbd_runtime_t:sock_file read;
 #============= bluetooth_t ==============
 allow bluetooth_t udev_runtime_t:dir search;
 allow bluetooth_t udev_runtime_t:lnk_file read;
+init_dbus_chat(bluetooth_t)
 
 #============= cupsd_t ==============
 allow cupsd_t systemd_machined_t:unix_stream_socket connectto;
@@ -165,6 +173,8 @@ allow dnsmasq_t container_runtime_t:dir { add_name search write };
 allow dnsmasq_t container_runtime_t:file { create open setattr write };
 allow dnsmasq_t systemd_machined_t:unix_stream_socket connectto;
 allow dnsmasq_t systemd_userdbd_runtime_t:sock_file read;
+
+allow semanage_t selinux_config_t:file { relabelfrom relabelto };
 
 #============= gpg_t ==============
 allow gpg_t tmp_t:file { open read };
@@ -182,6 +192,12 @@ allow initrc_t sysadm_t:process transition;
 
 #============= kmod_t ==============
 allow kmod_t initrc_runtime_t:file { read write };
+allow kmod_t self:capability2 perfmon;
+
+#============= lvm_t ==============
+# /dev/mapper/control can still be device_t when lvm starts, before udev
+# has applied lvm_control_t.
+allow lvm_t device_t:chr_file { getattr ioctl open read write };
 
 #============= ntpd_t ==============
 allow ntpd_t sysctl_net_t:dir search;
@@ -196,12 +212,20 @@ allow pipewire_t selinux_config_t:lnk_file read;
 #============= plymouth_t ==============
 allow plymouth_t init_t:unix_stream_socket connectto;
 
+#============= plymouthd_t ==============
+allow plymouthd_t self:netlink_kobject_uevent_socket { getattr read write setopt getopt bind create };
+
 #============= policykit_t ==============
 allow policykit_t selinux_config_t:lnk_file read;
 allow policykit_t systemd_userdbd_runtime_t:sock_file read;
+allow policykit_t staff_systemd_t:dbus send_msg;
+systemd_get_user_manager_units_status(policykit_t)
 
 #============= semanage_t ==============
 allow semanage_t staff_t:fifo_file { getattr write };
+
+#============= system_dbusd_t ==============
+init_get_system_status(system_dbusd_t)
 
 #============== staff_dbusd_t ==============
 allow staff_dbusd_t xdg_data_t:dir watch;
@@ -217,6 +241,12 @@ allow gpg_pinentry_t xdg_config_t:file { getattr open read };
 allow gpg_pinentry_t user_home_t:lnk_file read;
 allow gpg_pinentry_t user_home_t:dir search;
 allow gpg_pinentry_t self:process execmem;
+
+#============= devicekit_disk_t ==============
+allow devicekit_disk_t staff_systemd_t:dbus send_msg;
+
+#============= NetworkManager_t ==============
+allow NetworkManager_t staff_systemd_t:dbus send_msg;
 
 #============== staff_systemd_t ==============
 allow staff_systemd_t autofs_t:filesystem getattr;
@@ -304,6 +334,7 @@ allow staff_systemd_t systemd_journal_t:file { getattr map open read };
 allow staff_systemd_t systemd_logind_inhibit_runtime_t:fifo_file write;
 allow staff_systemd_t systemd_logind_runtime_t:dir search;
 allow staff_systemd_t systemd_logind_runtime_t:file { getattr open read };
+allow staff_systemd_t systemd_logind_t:dbus send_msg;
 allow staff_systemd_t systemd_logind_t:fd use;
 allow staff_systemd_t systemd_machined_runtime_t:dir search;
 allow staff_systemd_t systemd_machined_t:unix_stream_socket connectto;
@@ -347,6 +378,15 @@ allow sysadm_t usr_t:file entrypoint;
 #============= syslogd_t ==============
 allow syslogd_t systemd_unit_t:dir search;
 allow syslogd_t systemd_unit_t:lnk_file read;
+allow syslogd_t tmpfs_t:dir search;
+
+#============= systemd_coredump_t ==============
+miscfiles_search_generic_cert_dirs(systemd_coredump_t)
+miscfiles_read_generic_certs(systemd_coredump_t)
+
+#============= systemd_generator_t ==============
+seutil_read_config(systemd_generator_t)
+allow systemd_generator_t xdg_cache_t:dir search;
 
 #============= systemd_hostnamed_t ==============
 allow systemd_hostnamed_t cgroup_t:file { getattr open read write };
@@ -356,10 +396,14 @@ allow systemd_locale_t usr_t:file map;
 
 #============= systemd_logind_t ==============
 allow systemd_logind_t cgroup_t:file write;
+allow systemd_logind_t staff_systemd_t:dbus send_msg;
 
 #============= systemd_machined_t ==============
 allow systemd_machined_t cgroup_t:file { getattr open read write };
 allow systemd_machined_t selinux_config_t:lnk_file read;
+
+#============= systemd_modules_load_t ==============
+fs_read_cgroup_files(systemd_modules_load_t)
 
 #============= systemd_pcrphase_t ==============
 allow systemd_pcrphase_t nsfs_t:file getattr;
@@ -392,6 +436,3 @@ allow udev_t self:capability2 perfmon;
 #============= utempter_t ==============
 allow utempter_t staff_systemd_t:fd use;
 allow utempter_t staff_systemd_t:unix_stream_socket { getattr read write };
-
-#============= kmod_t ==============
-allow kmod_t self:capability2 perfmon;

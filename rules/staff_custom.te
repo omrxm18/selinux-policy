@@ -7,6 +7,7 @@ gen_require(`
 	type staff_git_t;
 	type staff_systemd_t;
 	type staff_dbusd_t;
+	type sysadm_t;
 	type user_home_t;
 
 	type wireplumber_t;
@@ -15,7 +16,7 @@ gen_require(`
 	type sysctl_dev_t;
 	type sysctl_kernel_t;
 	type sysctl_vm_t;
-	type sysctl_dev_t;
+	type sysctl_net_t;
 
 	type unreserved_port_t;
 
@@ -39,7 +40,10 @@ gen_require(`
 
 	type wm_tmpfs_t;
 	type user_tmp_t;
+	type xdm_t;
 	type xdm_tmp_t;
+	type xdm_var_lib_t;
+	type xdm_var_run_t;
 	type wm_tmp_t;
 	type mozilla_tmpfs_t;
 
@@ -62,8 +66,6 @@ gen_require(`
 	type bluetooth_t;
 	type user_tmpfs_t;
 	type accountsd_var_lib_t;
-	type security_t;
-	type default_t;
 
 	type etc_t;
 	type usr_t;
@@ -91,6 +93,7 @@ gen_require(`
 	type dma_device_t;
 	type dri_device_t;
 	type v4l_device_t;
+	type wireless_device_t;
 
 	class chr_file {
 		getattr ioctl map open read write
@@ -112,16 +115,17 @@ gen_require(`
 	};
 
 	class fd use;
-	class system start;
+	class system { start status reload };
+	class dbus send_msg;
 	class user_namespace create;
 	class io_uring allowed;
-	class sock_file write;
 	class unix_dgram_socket sendto;
 
 	class fifo_file { write getattr read ioctl };
 	class cap_userns { sys_admin sys_chroot };
 	class netlink_route_socket { read write };
 	class unix_stream_socket { connectto getattr ioctl read write };
+	class bluetooth_socket { read write };
 
 	class security { read_policy setenforce };
 	class tcp_socket { node_bind name_bind };
@@ -171,10 +175,6 @@ allow staff_wm_t var_run_t:dir watch;
 allow staff_wm_t init_runtime_t:dir search;
 allow staff_wm_t init_t:fd use;
 
-allow staff_wm_t mozilla_tmpfs_t:file map;
-allow staff_wm_t default_t:dir search;
-allow staff_wm_t default_t:lnk_file read;
-
 #================ wireplumber_t ================
 allow wireplumber_t alsa_etc_t:dir { getattr open read search };
 allow wireplumber_t alsa_etc_t:file { getattr open read };
@@ -182,9 +182,15 @@ allow wireplumber_t alsa_etc_t:lnk_file { getattr read };
 allow wireplumber_t alsa_var_lib_t:dir search;
 allow wireplumber_t user_home_t:lnk_file read;
 allow wireplumber_t init_t:unix_dgram_socket sendto;
+allow wireplumber_t init_t:dbus send_msg;
 allow wireplumber_t selinux_config_t:lnk_file read;
 allow wireplumber_t v4l_device_t:chr_file { getattr ioctl open read write };
 allow wireplumber_t bluetooth_t:fd use;
+allow wireplumber_t bluetooth_t:bluetooth_socket { read write };
+allow wireplumber_t xdm_t:unix_stream_socket connectto;
+allow wireplumber_t xdm_var_lib_t:dir { getattr search };
+allow wireplumber_t xdm_var_lib_t:file { getattr open read };
+allow wireplumber_t xdm_var_run_t:dir search;
 
 allowxperm { staff_t staff_systemd_t staff_wm_t } dri_device_t:chr_file ioctl { 0x6400-0x64ff };
 
@@ -218,104 +224,81 @@ allow staff_systemd_t wm_tmpfs_t:file { map read write };
 allow staff_sudo_t systemd_userdbd_runtime_t:dir { getattr open read search };
 allow staff_sudo_t systemd_userdbd_runtime_t:lnk_file read;
 allow staff_sudo_t systemd_userdbd_runtime_t:sock_file { getattr read write };
-allow staff_sudo_t init_t:unix_stream_socket connectto;
-allow staff_sudo_t init_t:unix_dgram_socket sendto;
+
+allow staff_sudo_t xdm_t:unix_stream_socket connectto;
 allow staff_sudo_t self:capability net_admin;
+
+#============= staff_u cross-role integration ==============
+# sudo switches to sysadm_t, which must still reach the staff user
+# session bus and systemd --user manager.
+dbus_send_spec_session_bus(staff, sysadm_t)
+systemd_user_manager_dbus_chat(staff, sysadm_t)
+systemd_user_manager_system_status(staff, sysadm_t)
+allow sysadm_t staff_systemd_t:system reload;
+allow sysadm_t staff_t:dbus send_msg;
+
+allow staff_dbusd_t staff_systemd_t:system reload;
+allow staff_wm_t staff_systemd_t:system { status reload };
+
+# kwin/WM session needs to talk to systemd (init_t) over D-Bus
+allow staff_wm_t init_t:dbus send_msg;
+allow init_t staff_wm_t:dbus send_msg;
 
 #============= staff_t ==============
 allow staff_t accountsd_var_lib_t:dir watch;
-allow staff_t bin_t:dir watch;
 allow staff_t boolean_t:file { open read };
 allow staff_t cgroup_t:dir { add_name create write };
 allow staff_t cgroup_t:file create;
 allow staff_t chromium_xdg_config_t:file execute;
 allow staff_t device_t:chr_file { ioctl map open read write };
-allow staff_t dma_device_t:chr_file { read write };
+allow staff_t dma_device_t:chr_file { ioctl open read write };
 allow staff_t dri_device_t:chr_file map;
-allow staff_t etc_t:lnk_file watch;
-allow staff_t node_t:tcp_socket node_bind;
-allow staff_t nsfs_t:file getattr;
-allow staff_t security_t:security read_policy;
-allow staff_t self:process execmem;
-allow staff_t user_tmpfs_t:file execmod;
-allow staff_t default_t:lnk_file read;
-allow staff_t accountsd_var_lib_t:dir watch;
-allow staff_t default_t:lnk_file read;
-allow staff_t dri_device_t:chr_file map;
-allow staff_t mount_runtime_t:file { open read watch };
-allow staff_t user_tmpfs_t:file execmod;
-allow staff_t xdg_data_t:file watch;
 allow staff_t git_home_t:dir watch;
-allow staff_t locale_t:dir watch;
-allow staff_t self:cap_userns { sys_admin sys_chroot };
-allow staff_t self:io_uring allowed;
-allow staff_t self:user_namespace create;
-allow staff_t ssh_home_t:file watch;
-allow staff_t systemd_user_runtime_t:file map;
-allow staff_t v4l_device_t:chr_file { ioctl open read };
-allow staff_t var_lib_t:file map;
-allow staff_t xdg_config_t:file { execute execute_no_trans };
-allow staff_t xdg_data_t:file { execute execute_no_trans };
-allow staff_t bin_t:dir { add_name remove_name write };
-allow staff_t bin_t:file { create setattr unlink write };
-allow staff_t default_t:dir watch;
-allow staff_t default_t:lnk_file watch;
-allow staff_t dma_device_t:chr_file open;
-allow staff_t git_home_t:dir watch;
-allow staff_t init_t:system start;
 allow staff_t ld_so_cache_t:file unlink;
 allow staff_t ldconfig_cache_t:dir { add_name remove_name write };
 allow staff_t ldconfig_cache_t:file { create map open read rename unlink write };
-allow staff_t lib_t:dir { add_name create remove_name setattr write };
-allow staff_t lib_t:lnk_file { create setattr };
 allow staff_t locale_t:dir watch;
 allow staff_t locale_t:file watch;
-allow staff_t man_t:dir { remove_name write };
-allow staff_t man_t:file { unlink write };
 allow staff_t mnt_t:dir write;
+allow staff_t mount_runtime_t:file { open read watch };
+allow staff_t node_t:tcp_socket node_bind;
+
 allow staff_t self:cap_userns { sys_admin sys_chroot };
 allow staff_t self:capability { chown dac_override kill setgid setuid };
 allow staff_t self:io_uring allowed;
+allow staff_t self:process execmem;
 allow staff_t self:user_namespace create;
 allow staff_t ssh_home_t:file watch;
 allow staff_t sysctl_vm_t:file { getattr open read };
 allow staff_t systemd_user_runtime_t:file map;
-allow staff_t systemd_user_tmpfs_t:file { ioctl read write };
+allow staff_t nsfs_t:file getattr;
+allow staff_t systemd_user_tmpfs_t:file { read write };
 allow staff_t unreserved_port_t:tcp_socket name_bind;
 allow staff_t unreserved_port_t:udp_socket name_bind;
-allow staff_t usr_t:dir { add_name create remove_name rmdir setattr write };
-allow staff_t usr_t:file { create rename setattr unlink write };
 allow staff_t v4l_device_t:chr_file { ioctl open read };
-allow staff_t var_lib_t:dir { add_name create remove_name rmdir write };
-allow staff_t var_lib_t:file map;
-allow staff_t var_lib_t:file { create rename setattr unlink write };
-allow staff_t var_lib_t:lnk_file read;
-allow staff_t var_log_t:dir { add_name write };
-allow staff_t var_log_t:file { append create open };
-allow staff_t var_t:dir { add_name create remove_name rmdir setattr write };
-allow staff_t var_t:file { append create rename setattr write };
-allow staff_t wm_tmp_t:file { ioctl open read };
-allow staff_t xdg_config_t:file { execute execute_no_trans };
-allow staff_t xdg_data_t:file { execute execute_no_trans };
-allow staff_t xdm_tmp_t:sock_file unlink;
+allow staff_t var_log_t:file open;
+allow staff_t wireless_device_t:chr_file write;
 allow system_dbusd_t staff_t:fifo_file write;
 
 #============== staff_git_t ==============
 allow staff_git_t mnt_t:dir { getattr search };
 allow staff_git_t staff_t:netlink_route_socket { read write };
 allow staff_git_t staff_t:unix_stream_socket { getattr ioctl read write };
+allow staff_git_t sysctl_net_t:file { getattr open read };
+
+# gpg signing
 allow staff_git_t gpg_agent_tmp_t:sock_file { write getattr };
 allow staff_git_t gpg_exec_t:file { getattr execute read open execute_no_trans map };
 allow staff_git_t gpg_secret_t:file { read write };
 allow staff_git_t user_tmpfs_t:file { read write };
+allow staff_git_t xdg_data_t:dir search;
 allow staff_git_t xdg_data_t:file append;
 allow staff_git_t gpg_secret_t:dir { search getattr write add_name };
-allow staff_git_t gpg_exec_t:file { getattr open read execute map };
 allow staff_git_t gpg_t:process transition;
+allow staff_git_t gpg_runtime_t:dir getattr;
 type_transition staff_git_t gpg_exec_t:process gpg_t;
 
 allow gpg_t staff_git_t:fd use;
 allow gpg_t staff_git_t:fifo_file { getattr read write };
 allow gpg_t staff_git_t:process sigchld;
-allow staff_git_t gpg_runtime_t:dir getattr;
 allowxperm gpg_t staff_git_t:fifo_file ioctl 0x542a;

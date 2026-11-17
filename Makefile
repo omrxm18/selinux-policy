@@ -19,7 +19,7 @@ all: $(PP_FILES)
 help:
 	@echo "make <name>                            build policy pp to out/<name>.pp"
 	@echo "install MODULE=<name without .pp>      load the targeted policy"
-	@echo "remove  MODULE=<name wihtout .pp>      unload the targeted policy"
+	@echo "remove  MODULE=<name without .pp>      unload the targeted policy"
 	@echo "clean                                  clean artifacts"
 
 install: $(if $(MODULE),$(OUT)/$(MODULE).pp,$(addprefix $(OUT)/,$(PP_FILES)))
