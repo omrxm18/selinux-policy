@@ -1,0 +1,10 @@
+policy_module(java_custom, 1.0)
+
+gen_require(`
+    type java_home_t;
+    type staff_t;
+
+    class dir { open read search getattr };
+')
+
+allow staff_t java_home_t:dir { open search read getattr };
