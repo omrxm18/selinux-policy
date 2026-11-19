@@ -1,0 +1,122 @@
+policy_module(user_custom, 1.0)
+
+gen_require(`
+	type boolean_t;
+	type bubblewrap_exec_t;
+	type cgroup_t;
+	type device_t;
+	type devlog_t;
+	type devpts_t;
+	type etc_t;
+	type fs_t;
+	type gpg_pinentry_exec_t;
+	type init_t;
+	type lib_t;
+	type nsfs_t;
+	type root_t;
+	type sysctl_dev_t;
+	type syslogd_runtime_t;
+	type systemd_locale_t;
+	type systemd_logind_runtime_t;
+	type systemd_machined_t;
+	type systemd_sessions_runtime_t;
+	type systemd_user_runtime_notify_t;
+	type systemd_user_runtime_t;
+	type systemd_user_tmpfs_t;
+	type tmp_t;
+	type tmpfs_t;
+	type udev_runtime_t;
+	type user_runtime_t;
+	type user_systemd_t;
+	type user_t;
+	type user_tmp_t;
+	type user_wm_t;
+	type usr_t;
+	type var_lib_t;
+	type wm_tmpfs_t;
+	type xdm_runtime_t;
+	type xdm_tmp_t;
+	type xdm_var_lib_t;
+	type xdm_var_run_t;
+	type user_dbusd_t;
+	type user_gkeyringd_t;
+
+	class file { create execute execute_no_trans getattr ioctl lock map mounton open read rename setattr unlink write };
+	class dir { add_name create getattr mounton open read remove_name search watch write };
+	class chr_file { getattr ioctl map open read write };
+	class sock_file write;
+	class lnk_file read;
+	class filesystem { mount unmount };
+	class dbus send_msg;
+	class unix_dgram_socket sendto;
+	class unix_stream_socket connectto;
+	class cap_userns { net_admin setpcap sys_admin sys_ptrace };
+	class netlink_route_socket nlmsg_write;
+	class user_namespace create;
+	class process2 { nnp_transition nosuid_transition };
+')
+
+#============= user_t ==============
+allow user_t boolean_t:file { open read };
+allow user_t device_t:chr_file { ioctl map open read write };
+
+#============= user_wm_t ==============
+allow user_wm_t bubblewrap_exec_t:file { execute execute_no_trans map open read };
+allow user_wm_t cgroup_t:dir search;
+allow user_wm_t cgroup_t:file { getattr open read write };
+allow user_wm_t device_t:chr_file { getattr ioctl map open read write };
+allow user_wm_t devlog_t:sock_file write;
+allow user_wm_t devpts_t:filesystem mount;
+allow user_wm_t etc_t:dir watch;
+allow user_wm_t fs_t:filesystem unmount;
+allow user_wm_t gpg_pinentry_exec_t:file execute;
+allow user_wm_t init_t:dbus send_msg;
+allow user_wm_t init_t:dir search;
+allow user_wm_t init_t:file { getattr ioctl open read };
+allow user_wm_t init_t:unix_dgram_socket sendto;
+allow user_wm_t lib_t:file execute_no_trans;
+allow user_wm_t nsfs_t:file getattr;
+allow user_wm_t root_t:dir mounton;
+allow user_wm_t self:cap_userns { net_admin setpcap sys_admin sys_ptrace };
+allow user_wm_t self:netlink_route_socket nlmsg_write;
+allow user_wm_t self:user_namespace create;
+allow user_wm_t sysctl_dev_t:dir search;
+allow user_wm_t sysctl_dev_t:file { getattr open read };
+allow user_wm_t syslogd_runtime_t:dir search;
+allow user_wm_t systemd_locale_t:dbus send_msg;
+allow user_wm_t systemd_logind_runtime_t:dir search;
+allow user_wm_t systemd_logind_runtime_t:file { getattr open read };
+allow user_wm_t systemd_machined_t:unix_stream_socket connectto;
+allow user_wm_t systemd_sessions_runtime_t:dir { getattr open read search watch };
+allow user_wm_t systemd_sessions_runtime_t:file { getattr open read };
+allow user_wm_t systemd_user_runtime_notify_t:sock_file write;
+allow user_wm_t systemd_user_runtime_t:dir search;
+allow user_wm_t systemd_user_runtime_t:sock_file write;
+allow user_wm_t systemd_user_tmpfs_t:file { getattr map read write };
+allow user_wm_t tmp_t:dir mounton;
+allow user_wm_t tmpfs_t:filesystem { mount unmount };
+allow user_wm_t udev_runtime_t:dir read;
+allow user_wm_t user_runtime_t:dir create;
+allow user_wm_t user_systemd_t:unix_dgram_socket sendto;
+allow user_wm_t user_t:process2 { nnp_transition nosuid_transition };
+allow user_wm_t user_tmp_t:file unlink;
+allow user_wm_t usr_t:dir watch;
+allow user_wm_t usr_t:file execute;
+allow user_wm_t var_lib_t:dir watch;
+allow user_wm_t var_lib_t:file { getattr map open read };
+allow user_wm_t var_lib_t:lnk_file read;
+allow user_wm_t wm_tmpfs_t:dir mounton;
+allow user_wm_t wm_tmpfs_t:file mounton;
+allow user_wm_t xdm_runtime_t:dir { getattr search };
+allow user_wm_t xdm_runtime_t:file { map open read write };
+allow user_wm_t xdm_tmp_t:sock_file unlink;
+allow user_wm_t xdm_var_lib_t:dir { getattr open read search watch };
+allow user_wm_t xdm_var_lib_t:file { getattr lock map open read };
+allow user_wm_t xdm_var_run_t:dir { add_name create read remove_name watch write };
+allow user_wm_t xdm_var_run_t:file { create map rename setattr unlink write };
+allow user_wm_t xdm_var_run_t:sock_file write;
+
+allow user_dbusd_t user_wm_t:fd use;
+allow user_dbusd_t xdm_var_run_t:dir search;
+
+allow user_gkeyringd_t xdm_var_run_t:dir { add_name create getattr open read search write };

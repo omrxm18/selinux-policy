@@ -9,20 +9,20 @@ gen_require(`
 	type staff_dbusd_t;
 	type sysadm_t;
 	type user_home_t;
-
 	type wireplumber_t;
-
 	type mount_runtime_t;
 	type sysctl_dev_t;
 	type sysctl_kernel_t;
 	type sysctl_vm_t;
 	type sysctl_net_t;
-
+	type fuse_device_t;
+	type user_runtime_t;
+	type xauth_home_t;
+	type staff_bubblewrap_t;
+	type systemd_user_unit_t;
 	type unreserved_port_t;
-
 	type alsa_etc_t;
 	type alsa_var_lib_t;
-
 	type xdg_documents_t;
 	type xdg_downloads_t;
 	type xdg_pictures_t;
@@ -31,13 +31,10 @@ gen_require(`
 	type xdg_videos_t;
 	type xdg_cache_t;
 	type chromium_xdg_config_t;
-
 	type syslogd_runtime_t;
 	type wayland_runtime_t;
-
 	type boolean_t;
 	type man_t;
-
 	type wm_tmpfs_t;
 	type user_tmp_t;
 	type xdm_t;
@@ -46,41 +43,27 @@ gen_require(`
 	type xdm_var_run_t;
 	type wm_tmp_t;
 	type mozilla_tmpfs_t;
-
 	type ld_so_cache_t;
 	type ldconfig_cache_t;
-
 	type locale_t;
-
 	type selinux_config_t;
 	type node_t;
-
 	type systemd_user_tmpfs_t;
 	type systemd_userdbd_runtime_t;
 	type session_dbusd_runtime_t;
 	type systemd_user_runtime_t;
 	type system_dbusd_t;
-
 	type devlog_t;
 	type init_runtime_t;
 	type bluetooth_t;
 	type user_tmpfs_t;
 	type accountsd_var_lib_t;
-
-	type etc_t;
-	type usr_t;
-	type bin_t;
-	type lib_t;
-	type mnt_t;
+	type etc_t, usr_t, bin_t, lib_t, mnt_t;
+	type var_t, var_run_t, var_lib_t, var_log_t;
 	type init_t;
 	type cert_t;
 	type nsfs_t;
 	type cgroup_t;
-	type var_t;
-	type var_run_t;
-	type var_lib_t;
-	type var_log_t;
-
 	type gpg_agent_tmp_t;
 	type gpg_secret_t;
 	type gpg_exec_t;
@@ -88,12 +71,29 @@ gen_require(`
 	type gpg_t;
 	type ssh_home_t;
 	type git_home_t;
-
 	type device_t;
 	type dma_device_t;
 	type dri_device_t;
 	type v4l_device_t;
 	type wireless_device_t;
+	type bubblewrap_exec_t;
+	type devpts_t;
+	type fs_t;
+	type gpg_pinentry_t;
+	type security_t;
+	type gnome_xdg_config_t;
+	type gpg_pinentry_exec_t;
+	type http_port_t;
+	type mozilla_home_t;
+	type proc_net_t;
+	type root_t;
+	type systemd_logind_runtime_t;
+	type systemd_machined_t;
+	type systemd_sessions_runtime_t;
+	type systemd_user_runtime_notify_t;
+	type tmp_t;
+	type tmpfs_t;
+	type udev_runtime_t;
 
 	class chr_file {
 		getattr ioctl map open read write
@@ -104,29 +104,33 @@ gen_require(`
 	};
 
 	class dir {
-		add_name getattr open read
-		remove_name watch rmdir search write
+		add_name create getattr mounton open read
+		remove_name rmdir search setattr watch write
 	};
 
 	class file {
-		create getattr link ioctl lock map open
-		read rename setattr unlink watch write
-		execmod execute_no_trans execute append
+		append create execmod execute execute_no_trans getattr ioctl
+		link lock map mounton open read rename setattr unlink watch write
 	};
 
+	class process { execmem getcap getsched ptrace sigchld transition };
+	class netlink_route_socket { nlmsg_write read write };
+	class cap_userns { net_admin setpcap sys_admin sys_chroot };
+	class tcp_socket { name_bind name_connect node_bind };
 	class fd use;
 	class system { start status reload };
 	class dbus send_msg;
 	class user_namespace create;
 	class io_uring allowed;
 	class unix_dgram_socket sendto;
-
+	class filesystem { mount unmount };
+	class process2 { nnp_transition nosuid_transition };
+	class service { status start };
 	class fifo_file { write getattr read ioctl };
 	class cap_userns { sys_admin sys_chroot };
 	class netlink_route_socket { read write };
 	class unix_stream_socket { connectto getattr ioctl read write };
 	class bluetooth_socket { read write };
-
 	class security { read_policy setenforce };
 	class tcp_socket { node_bind name_bind };
 	class udp_socket { name_bind };
@@ -166,6 +170,8 @@ allow staff_wm_t accountsd_var_lib_t:dir search;
 allow staff_wm_t etc_t:file { execute execute_no_trans };
 allow staff_wm_t lib_t:file execute_no_trans;
 
+allow staff_wm_t gpg_pinentry_t:shm { unix_read unix_write };
+
 allow staff_wm_t mount_runtime_t:file watch;
 allow staff_wm_t session_dbusd_runtime_t:sock_file write;
 allow staff_wm_t staff_t:shm { associate getattr read unix_read unix_write write };
@@ -174,6 +180,58 @@ allow staff_wm_t user_tmp_t:file { getattr open read unlink };
 allow staff_wm_t var_run_t:dir watch;
 allow staff_wm_t init_runtime_t:dir search;
 allow staff_wm_t init_t:fd use;
+
+allow staff_wm_t bubblewrap_exec_t:file { execute execute_no_trans map open read };
+allow staff_wm_t cgroup_t:dir { search setattr write };
+allow staff_wm_t cgroup_t:file { getattr open read write };
+allow staff_wm_t chromium_xdg_config_t:dir { add_name getattr open read remove_name search write };
+allow staff_wm_t chromium_xdg_config_t:file { create getattr open read rename setattr unlink write };
+allow staff_wm_t devpts_t:filesystem mount;
+allow staff_wm_t etc_t:dir watch;
+allow staff_wm_t etc_t:file map;
+allow staff_wm_t fs_t:filesystem unmount;
+allow staff_wm_t gnome_xdg_config_t:dir search;
+allow staff_wm_t gnome_xdg_config_t:file { getattr map open read };
+allow staff_wm_t gpg_pinentry_exec_t:file execute;
+allow staff_wm_t http_port_t:tcp_socket name_connect;
+allow staff_wm_t mozilla_home_t:dir { add_name getattr open read remove_name search write };
+allow staff_wm_t mozilla_home_t:file { create getattr open read rename setattr unlink write };
+allow staff_wm_t nsfs_t:file getattr;
+allow staff_wm_t proc_net_t:lnk_file read;
+allow staff_wm_t root_t:dir mounton;
+allow staff_wm_t self:cap_userns { net_admin setpcap sys_admin };
+allow staff_wm_t self:netlink_route_socket nlmsg_write;
+allow staff_wm_t self:user_namespace create;
+allow staff_wm_t staff_systemd_t:unix_dgram_socket sendto;
+allow staff_wm_t staff_t:process2 { nnp_transition nosuid_transition };
+allow staff_wm_t sysctl_net_t:dir search;
+allow staff_wm_t sysctl_net_t:file { getattr open read };
+allow staff_wm_t systemd_logind_runtime_t:dir search;
+allow staff_wm_t systemd_logind_runtime_t:file { getattr open read };
+allow staff_wm_t systemd_machined_t:unix_stream_socket connectto;
+allow staff_wm_t systemd_sessions_runtime_t:dir search;
+allow staff_wm_t systemd_sessions_runtime_t:file { getattr open read };
+allow staff_wm_t systemd_user_runtime_notify_t:sock_file write;
+allow staff_wm_t systemd_user_runtime_t:dir { getattr search write };
+allow staff_wm_t systemd_user_runtime_t:sock_file write;
+allow staff_wm_t tmp_t:dir mounton;
+allow staff_wm_t tmpfs_t:filesystem { mount unmount };
+allow staff_wm_t udev_runtime_t:dir read;
+allow staff_wm_t user_runtime_t:dir create;
+allow staff_wm_t user_tmp_t:file { create map write };
+allow staff_wm_t usr_t:dir watch;
+allow staff_wm_t usr_t:file execute;
+allow staff_wm_t var_lib_t:dir watch;
+allow staff_wm_t var_lib_t:file map;
+allow staff_wm_t var_lib_t:lnk_file read;
+allow staff_wm_t wm_tmpfs_t:dir mounton;
+allow staff_wm_t wm_tmpfs_t:file mounton;
+allow staff_wm_t xdg_cache_t:sock_file write;
+allow staff_wm_t xdg_config_t:dir watch;
+allow staff_wm_t xdg_data_t:dir watch;
+allow staff_wm_t xdg_data_t:file execute;
+allow staff_wm_t xdg_downloads_t:dir { getattr open read search watch };
+allow staff_wm_t xdg_downloads_t:file { getattr open read };
 
 #================ wireplumber_t ================
 allow wireplumber_t alsa_etc_t:dir { getattr open read search };
@@ -194,30 +252,7 @@ allow wireplumber_t xdm_var_run_t:dir search;
 
 allowxperm { staff_t staff_systemd_t staff_wm_t } dri_device_t:chr_file ioctl { 0x6400-0x64ff };
 
-#================ staff_systemd_t ================
-# user-level systemd services (baloo, KDE) reading files
-allow staff_systemd_t user_home_t:dir { getattr open read search watch };
-allow staff_systemd_t user_home_t:file { getattr open read };
-allow staff_systemd_t user_home_t:lnk_file { getattr read };
-allow staff_systemd_t { xdg_documents_t xdg_downloads_t xdg_pictures_t xdg_videos_t }:dir { getattr open read search watch };
-allow staff_systemd_t xdg_downloads_t:file { getattr open read };
-allow staff_systemd_t lib_t:file execute_no_trans;
-allow staff_systemd_t cert_t:dir search;
-allow staff_systemd_t cert_t:file { getattr open read };
-allow staff_systemd_t xdg_cache_t:file { link setattr };
-allow staff_systemd_t accountsd_var_lib_t:dir { read getattr search };
-allow staff_systemd_t systemd_user_tmpfs_t:file execmod;
-allow staff_systemd_t dma_device_t:chr_file { read write };
-allow staff_systemd_t etc_t:file watch;
-
-# fonts, shared libraries, and the Wayland session
-miscfiles_read_fonts(staff_systemd_t)
-wayland_stream_connect(staff_systemd_t)
-allow staff_systemd_t { fonts_t fonts_cache_t }:dir { getattr open };
-allow staff_systemd_t usr_t:file map;
-allow staff_systemd_t mnt_t:dir search;
-allow staff_systemd_t var_run_t:dir watch;
-allow staff_systemd_t wm_tmpfs_t:file { map read write };
+allow system_dbusd_t staff_t:fifo_file write;
 
 #================ staff_sudo_t ================
 # sudo looking up users through systemd-userdbd
@@ -277,8 +312,14 @@ allow staff_t unreserved_port_t:tcp_socket name_bind;
 allow staff_t unreserved_port_t:udp_socket name_bind;
 allow staff_t v4l_device_t:chr_file { ioctl open read };
 allow staff_t var_log_t:file open;
+allow staff_t security_t:security read_policy;
 allow staff_t wireless_device_t:chr_file write;
-allow system_dbusd_t staff_t:fifo_file write;
+allow staff_t fuse_device_t:chr_file { open read write };
+
+#============== staff_dbuds_t ==============
+allow staff_dbusd_t staff_wm_t:fd use;
+allow staff_dbusd_t user_runtime_t:dir watch;
+allow staff_dbusd_t xauth_home_t:file { open read };
 
 #============== staff_git_t ==============
 allow staff_git_t mnt_t:dir { getattr search };
@@ -302,3 +343,14 @@ allow gpg_t staff_git_t:fd use;
 allow gpg_t staff_git_t:fifo_file { getattr read write };
 allow gpg_t staff_git_t:process sigchld;
 allowxperm gpg_t staff_git_t:fifo_file ioctl 0x542a;
+
+#============== staff_bubblewrap_t ==============
+allow staff_bubblewrap_t lib_t:file execute_no_trans;
+allow staff_bubblewrap_t self:process getsched;
+allow staff_bubblewrap_t user_tmpfs_t:file map;
+
+#============== staff_dbusd_t ==============
+allow staff_dbusd_t xdg_data_t:dir watch;
+allow staff_dbusd_t systemd_user_unit_t:service status;
+allow staff_dbusd_t staff_systemd_t:system { start status };
+allow staff_dbusd_t systemd_user_unit_t:service { start status };
