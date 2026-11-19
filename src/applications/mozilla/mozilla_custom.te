@@ -20,6 +20,7 @@ gen_require(`
 	type systemd_machined_t;
 	type tmp_t, tmpfs_t;
 	type mozilla_tmpfs_t;
+	type transproxy_port_t, unreserved_port_t;
 
 	class cap_userns { net_admin setpcap };
 	class dir { create mounton };
@@ -70,6 +71,10 @@ allow mozilla_t tmp_t:dir mounton;
 allow mozilla_t nsfs_t:file getattr;
 allow mozilla_t sysctl_t:file { getattr open read };
 allow mozilla_t mozilla_tmpfs_t:file mounton;
+
+# allow other unruled ports
+allow mozilla_t transproxy_port_t:tcp_socket name_connect;
+allow mozilla_t unreserved_port_t:tcp_socket name_connect;
 
 # p11-kit CA trust store (mapped by Firefox, e.g. NSS module).
 allow mozilla_t etc_t:file map;
