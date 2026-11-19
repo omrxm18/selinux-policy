@@ -59,6 +59,8 @@ gen_require(`
 #============= user_t ==============
 allow user_t boolean_t:file { open read };
 allow user_t device_t:chr_file { ioctl map open read write };
+allow user_t systemd_user_tmpfs_t:file { ioctl read write };
+allow user_t nsfs_t:file getattr;
 
 #============= user_wm_t ==============
 allow user_wm_t bubblewrap_exec_t:file { execute execute_no_trans map open read };

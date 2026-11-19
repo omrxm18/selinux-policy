@@ -94,6 +94,7 @@ gen_require(`
 	type tmp_t;
 	type tmpfs_t;
 	type udev_runtime_t;
+	type user_dbusd_t;
 
 	class chr_file {
 		getattr ioctl map open read write
@@ -273,7 +274,7 @@ allow sysadm_t staff_systemd_t:system reload;
 allow sysadm_t staff_t:dbus send_msg;
 
 allow staff_dbusd_t staff_systemd_t:system reload;
-allow staff_wm_t staff_systemd_t:system { status reload };
+allow staff_wm_t staff_systemd_t:system { status reload start };
 
 # kwin/WM session needs to talk to systemd (init_t) over D-Bus
 allow staff_wm_t init_t:dbus send_msg;
@@ -297,7 +298,8 @@ allow staff_t locale_t:file watch;
 allow staff_t mnt_t:dir write;
 allow staff_t mount_runtime_t:file { open read watch };
 allow staff_t node_t:tcp_socket node_bind;
-
+allow { staff_dbusd_t user_dbusd_t } var_lib_t:dir watch;
+allow staff_t systemd_user_tmpfs_t:file ioctl;
 allow staff_t self:cap_userns { sys_admin sys_chroot };
 allow staff_t self:capability { chown dac_override kill setgid setuid };
 allow staff_t self:io_uring allowed;
