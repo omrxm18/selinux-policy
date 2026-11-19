@@ -74,9 +74,7 @@ allow mozilla_t mozilla_tmpfs_t:file mounton;
 # p11-kit CA trust store (mapped by Firefox, e.g. NSS module).
 allow mozilla_t etc_t:file map;
 
-allow mozilla_t gnome_xdg_config_t:dir search;
-allow mozilla_t gnome_xdg_config_t:file { getattr open read };
-allow mozilla_t gnome_xdg_config_t:file map;
+allow mozilla_t self:process getcap;
 
 # Userdb lookup used by the crash reporter.
 systemd_connect_machined(mozilla_t)
