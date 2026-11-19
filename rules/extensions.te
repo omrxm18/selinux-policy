@@ -130,12 +130,14 @@ gen_require(`
     type systemd_user_unit_t;
     type default_t;
     type git_home_t;
+    type local_login_t;
 
     class capability setuid;
     class capability2 { checkpoint_restore perfmon };
     class chr_file { getattr ioctl lock open read write };
     class dir { add_name create getattr ioctl lock mounton open read remove_name rmdir search watch write };
     class fd use;
+    class key search;
     class system { start status };
     class service { start status };
     class fifo_file { getattr write };
@@ -274,3 +276,7 @@ allow utempter_t staff_systemd_t:unix_stream_socket { getattr read write };
 
 allow { NetworkManager_t auditd_t chkpwd_t pipewire_t policykit_t staff_t staff_sudo_t
             systemd_userdbd_t user_dbusd_t user_systemd_t } xdm_t:unix_stream_socket connectto;
+
+allow xdm_t self:process execmem;
+allow xdm_t init_t:system status;
+allow local_login_t xdm_t:key search;
