@@ -2,8 +2,8 @@ TYPE ?= $(strip $(shell awk -F= '/^SELINUXTYPE/{ print $$2 }' /etc/selinux/confi
 DEVEL := /usr/share/selinux/$(TYPE)/include/Makefile
 SEMODULE = semodule
 
-OUT ?= out
-SRC_DIR ?= rules
+OUT = out
+SRC_DIR = src
 
 PP_FILES=$(patsubst $(SRC_DIR)/%.te,%.pp,$(wildcard $(SRC_DIR)/*.te))
 
