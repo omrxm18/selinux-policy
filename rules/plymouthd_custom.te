@@ -1,0 +1,21 @@
+policy_module(plymouthd_custom, 1.0)
+
+gen_require(`
+	type plymouthd_t;
+	type init_t;
+	type usr_t;
+	type efivarfs_t;
+	type initrc_runtime_t;
+
+	class process signal;
+	class capability sys_chroot;
+	class file { map open read };
+	class dir search;
+')
+
+allow plymouthd_t init_t:process signal;
+allow plymouthd_t self:capability sys_chroot;
+allow plymouthd_t usr_t:file map;
+allow plymouthd_t efivarfs_t:dir search;
+allow plymouthd_t efivarfs_t:file { open read };
+allow plymouthd_t initrc_runtime_t:dir search;
