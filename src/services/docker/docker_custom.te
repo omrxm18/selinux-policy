@@ -1,0 +1,20 @@
+policy_module(docker_custom, 1.0)
+
+gen_require(`
+	type dockerc_user_t;
+	type dockerd_t;
+
+	class unix_stream_socket connectto;
+')
+
+allow dockerc_user_t dockerd_t:unix_stream_socket connectto;
+
+container_read_home_config(dockerc_user_t)
+files_read_usr_symlinks(dockerc_user_t)
+files_search_mnt(dockerc_user_t)
+userdom_exec_user_bin_files(dockerc_user_t)
+userdom_list_user_home_content(dockerc_user_t)
+userdom_read_user_home_content_symlinks(dockerc_user_t)
+userdom_use_user_ptys(dockerc_user_t)
+xdg_read_data_files(dockerc_user_t)
+
