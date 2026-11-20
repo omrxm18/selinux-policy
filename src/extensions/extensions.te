@@ -253,11 +253,6 @@ allow NetworkManager_t staff_systemd_t:dbus send_msg;
 allow NetworkManager_t user_systemd_t:dbus send_msg;
 allow NetworkManager_t xdg_cache_t:dir search;
 
-#============= sysadm_t ==============
-allow sysadm_t self:process execmem;
-allow sysadm_t staff_dbusd_t:unix_stream_socket connectto;
-allow sysadm_t usr_t:file entrypoint;
-
 #============= syslogd_t ==============
 allow syslogd_t systemd_unit_t:dir search;
 allow syslogd_t systemd_unit_t:lnk_file read;

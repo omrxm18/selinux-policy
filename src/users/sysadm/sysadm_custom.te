@@ -1,0 +1,38 @@
+policy_module(sysadm_custom, 1.0)
+
+gen_require(`
+    type sysadm_t;
+    type staff_systemd_t;
+    type staff_t;
+    type staff_dbusd_t;
+    type usr_t;
+    type tailscaled_t;
+    type tailscaled_runtime_t;
+    type initrc_t;
+
+    class tun_socket relabelfrom;
+    class unix_stream_socket connectto;
+    class netlink_netfilter_socket { bind create getopt read write };
+    class sock_file { getattr write };
+    class dir search;
+    class process execmem;
+    class dbus send_msg;
+    class system reload;
+    class bpf { prog_run prog_load };
+    class capability2 perfmon;
+')
+
+allow sysadm_t staff_systemd_t:system reload;
+allow sysadm_t staff_t:dbus send_msg;
+allow sysadm_t self:process execmem;
+allow sysadm_t staff_dbusd_t:unix_stream_socket connectto;
+allow sysadm_t usr_t:file entrypoint;
+allow sysadm_t tailscaled_runtime_t:dir search;
+allow sysadm_t tailscaled_runtime_t:sock_file { getattr write };
+allow sysadm_t tailscaled_t:unix_stream_socket connectto;
+allow sysadm_t initrc_t:tun_socket relabelfrom;
+allow sysadm_t self:netlink_netfilter_socket { bind create getopt read write };
+allow sysadm_t self:tun_socket { relabelfrom relabelto };
+
+dev_rw_tpm(sysadm_t)
+init_stream_connect_script(sysadm_t)

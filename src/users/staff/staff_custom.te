@@ -270,8 +270,6 @@ allow staff_sudo_t self:capability net_admin;
 dbus_send_spec_session_bus(staff, sysadm_t)
 systemd_user_manager_dbus_chat(staff, sysadm_t)
 systemd_user_manager_system_status(staff, sysadm_t)
-allow sysadm_t staff_systemd_t:system reload;
-allow sysadm_t staff_t:dbus send_msg;
 
 allow staff_dbusd_t staff_systemd_t:system reload;
 allow staff_wm_t staff_systemd_t:system { status reload start };
