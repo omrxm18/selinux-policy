@@ -1,2 +1,4 @@
 out/
 tmp/
+src/**/tmp/
+src/**/*.pp

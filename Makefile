@@ -5,16 +5,21 @@ SEMODULE = semodule
 OUT = out
 SRC_DIR = src
 
-PP_FILES=$(patsubst $(SRC_DIR)/%.te,%.pp,$(wildcard $(SRC_DIR)/*.te))
+TE_FILES := $(shell find $(SRC_DIR) -type f -name '*.te')
+MODULES  := $(basename $(notdir $(TE_FILES)))
+PP_FILES := $(addsuffix .pp,$(MODULES))
 
-%.pp: $(SRC_DIR)/%.te
-	@mkdir -p $(OUT)
-	@$(MAKE) -f $(DEVEL) $@
-	@mv -f *.pp $(OUT)
+vpath %.te $(sort $(dir $(TE_FILES)))
 
 .PHONY: all help install remove clean
 
 all: $(PP_FILES)
+
+%.pp: %.te
+	@mkdir -p $(OUT) tmp/$*
+	@cp -f $(wildcard $(<D)/$*.te $(<D)/$*.if $(<D)/$*.fc) tmp/$*/
+	@$(MAKE) -C tmp/$* -f $(DEVEL) $@
+	@mv -f tmp/$*/$@ $(OUT)/$@
 
 help:
 	@echo "make <name>                            build policy pp to out/<name>.pp"
