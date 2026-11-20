@@ -9,7 +9,6 @@ gen_require(`
 	type staff_dbusd_t;
 	type sysadm_t;
 	type user_home_t;
-	type wireplumber_t;
 	type mount_runtime_t;
 	type sysctl_dev_t;
 	type sysctl_kernel_t;
@@ -131,7 +130,7 @@ gen_require(`
 	class cap_userns { sys_admin sys_chroot };
 	class netlink_route_socket { read write };
 	class unix_stream_socket { connectto getattr ioctl read write };
-	class bluetooth_socket { read write };
+	class bluetooth_socket { read write setopt ioctl };
 	class security { read_policy setenforce };
 	class tcp_socket { node_bind name_bind };
 	class udp_socket { name_bind };
@@ -233,23 +232,6 @@ allow staff_wm_t xdg_data_t:dir watch;
 allow staff_wm_t xdg_data_t:file execute;
 allow staff_wm_t xdg_downloads_t:dir { getattr open read search watch };
 allow staff_wm_t xdg_downloads_t:file { getattr open read };
-
-#================ wireplumber_t ================
-allow wireplumber_t alsa_etc_t:dir { getattr open read search };
-allow wireplumber_t alsa_etc_t:file { getattr open read };
-allow wireplumber_t alsa_etc_t:lnk_file { getattr read };
-allow wireplumber_t alsa_var_lib_t:dir search;
-allow wireplumber_t user_home_t:lnk_file read;
-allow wireplumber_t init_t:unix_dgram_socket sendto;
-allow wireplumber_t init_t:dbus send_msg;
-allow wireplumber_t selinux_config_t:lnk_file read;
-allow wireplumber_t v4l_device_t:chr_file { getattr ioctl open read write };
-allow wireplumber_t bluetooth_t:fd use;
-allow wireplumber_t bluetooth_t:bluetooth_socket { read write };
-allow wireplumber_t xdm_t:unix_stream_socket connectto;
-allow wireplumber_t xdm_var_lib_t:dir { getattr search };
-allow wireplumber_t xdm_var_lib_t:file { getattr open read };
-allow wireplumber_t xdm_var_run_t:dir search;
 
 allowxperm { staff_t staff_systemd_t staff_wm_t } dri_device_t:chr_file ioctl { 0x6400-0x64ff };
 

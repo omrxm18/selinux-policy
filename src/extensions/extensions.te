@@ -131,6 +131,7 @@ gen_require(`
     type default_t;
     type git_home_t;
     type local_login_t;
+    type wireplumber_t;
 
     class capability setuid;
     class capability2 { checkpoint_restore perfmon };
@@ -219,6 +220,23 @@ allow plymouth_t init_t:unix_stream_socket connectto;
 
 #============= plymouthd_t ==============
 allow plymouthd_t self:netlink_kobject_uevent_socket { getattr read write setopt getopt bind create };
+
+#============= wireplumber_t =============
+allow wireplumber_t alsa_etc_t:dir { getattr open read search };
+allow wireplumber_t alsa_etc_t:file { getattr open read };
+allow wireplumber_t alsa_etc_t:lnk_file { getattr read };
+allow wireplumber_t alsa_var_lib_t:dir search;
+allow wireplumber_t user_home_t:lnk_file read;
+allow wireplumber_t init_t:unix_dgram_socket sendto;
+allow wireplumber_t init_t:dbus send_msg;
+allow wireplumber_t selinux_config_t:lnk_file read;
+allow wireplumber_t v4l_device_t:chr_file { getattr ioctl open read write };
+allow wireplumber_t bluetooth_t:fd use;
+allow wireplumber_t bluetooth_t:bluetooth_socket { read write setopt ioctl };
+allow wireplumber_t xdm_t:unix_stream_socket connectto;
+allow wireplumber_t xdm_var_lib_t:dir { getattr search };
+allow wireplumber_t xdm_var_lib_t:file { getattr open read };
+allow wireplumber_t xdm_var_run_t:dir search;
 
 #============= policykit_t ==============
 allow policykit_t selinux_config_t:lnk_file read;
