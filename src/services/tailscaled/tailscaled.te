@@ -1,0 +1,203 @@
+policy_module(tailscaled, 1.0)
+
+gen_require(`
+    type staff_t;
+    type system_cron_spool_t;
+    type saslauthd_keytab_t;
+    type plymouthd_unit_t;
+    type NetworkManager_etc_rw_t;
+    type tailscaled_t;
+    type tls_privkey_t;
+    type lvm_etc_t;
+    type initrc_t;
+    type selinux_config_t;
+    type geoclue_etc_t;
+    type container_config_t;
+    type wireguard_etc_t;
+    type etc_t;
+    type cert_t;
+    type dbusd_etc_t;
+    type exports_t;
+    type modules_conf_t;
+    type unreserved_port_t;
+    type pppd_etc_t;
+    type default_context_t;
+    type file_context_t;
+    type systemd_user_unit_t;
+    type NetworkManager_etc_t;
+    type httpd_config_t;
+    type tor_etc_t;
+    type systemd_unit_t;
+    type policy_config_t;
+    type bin_t;
+    type alsa_etc_t;
+    type firewalld_etc_rw_t;
+    type cupsd_rw_etc_t;
+    type virt_etc_t;
+    type udev_rules_t;
+    type cgroup_t;
+    type auditd_etc_t;
+    type virt_etc_rw_t;
+    type bluetooth_conf_t;
+    type lvm_metadata_t;
+    type net_conf_t;
+    type cupsd_etc_t;
+    type pppd_etc_rw_t;
+    type samba_etc_t;
+    class netlink_netfilter_socket { bind create getopt read write };
+    class tun_socket { relabelfrom relabelto };
+    class process getsched;
+    class fifo_file read;
+    class netlink_generic_socket { bind create getattr getopt read setopt write };
+    class file { getattr open read };
+    class dir { getattr open read search watch watch_reads };
+    class sock_file getattr;
+    class tcp_socket name_bind;
+')
+
+type tailscaled_t;
+type tailscaled_exec_t;
+init_daemon_domain(tailscaled_t, tailscaled_exec_t)
+
+type tailscaled_runtime_t;
+files_type(tailscaled_runtime_t)
+
+type tailscaled_var_lib_t;
+files_type(tailscaled_var_lib_t)
+
+# remove once the AVCs are sorted out
+permissive tailscaled_t;
+
+allow tailscaled_t self:capability { net_admin net_raw net_bind_service };
+allow tailscaled_t self:process { signal_perms };
+allow tailscaled_t self:unix_stream_socket create_stream_socket_perms;
+allow tailscaled_t self:unix_dgram_socket create_socket_perms;
+allow tailscaled_t self:tcp_socket create_stream_socket_perms;
+allow tailscaled_t self:udp_socket create_socket_perms;
+allow tailscaled_t self:tun_socket create_socket_perms;
+allow tailscaled_t self:netlink_route_socket create_netlink_socket_perms;
+allow tailscaled_t self:netlink_netfilter_socket create_socket_perms;
+
+manage_dirs_pattern(tailscaled_t, tailscaled_runtime_t, tailscaled_runtime_t)
+manage_sock_files_pattern(tailscaled_t, tailscaled_runtime_t, tailscaled_runtime_t)
+manage_dirs_pattern(tailscaled_t, tailscaled_var_lib_t, tailscaled_var_lib_t)
+manage_files_pattern(tailscaled_t, tailscaled_var_lib_t, tailscaled_var_lib_t)
+
+corenet_rw_tun_tap_dev(tailscaled_t)
+logging_send_syslog_msg(tailscaled_t)
+miscfiles_read_localization(tailscaled_t)
+sysnet_dns_name_resolve(tailscaled_t)
+
+# client side
+allow staff_t tailscaled_runtime_t:dir search;
+allow staff_t tailscaled_runtime_t:sock_file { getattr write };
+allow staff_t tailscaled_t:unix_stream_socket connectto;
+
+#============= tailscaled_t ==============
+allow tailscaled_t NetworkManager_etc_rw_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t NetworkManager_etc_rw_t:file getattr;
+allow tailscaled_t NetworkManager_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t alsa_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t auditd_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t bin_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t bluetooth_conf_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t cert_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t cgroup_t:file { open read };
+allow tailscaled_t container_config_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t cupsd_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t cupsd_rw_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t dbusd_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t default_context_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t etc_t:dir { watch watch_reads };
+allow tailscaled_t etc_t:sock_file getattr;
+allow tailscaled_t exports_t:dir { getattr open read watch watch_reads };
+allow tailscaled_t file_context_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t firewalld_etc_rw_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t geoclue_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t geoclue_etc_t:file getattr;
+allow tailscaled_t httpd_config_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t lvm_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t lvm_metadata_t:dir { getattr open read watch watch_reads };
+allow tailscaled_t modules_conf_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t net_conf_t:dir { watch watch_reads };
+allow tailscaled_t plymouthd_unit_t:file getattr;
+allow tailscaled_t policy_config_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t pppd_etc_rw_t:dir { getattr open read watch watch_reads };
+allow tailscaled_t pppd_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t samba_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t saslauthd_keytab_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t self:fifo_file read;
+allow tailscaled_t self:netlink_generic_socket { bind create getattr getopt read setopt write };
+allow tailscaled_t self:process getsched;
+allow tailscaled_t selinux_config_t:dir { read watch watch_reads };
+allow tailscaled_t system_cron_spool_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t systemd_unit_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t systemd_user_unit_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t tls_privkey_t:dir { getattr open read watch watch_reads };
+allow tailscaled_t tor_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t tor_etc_t:file getattr;
+allow tailscaled_t udev_rules_t:dir { getattr open read watch watch_reads };
+allow tailscaled_t unreserved_port_t:tcp_socket name_bind;
+allow tailscaled_t virt_etc_rw_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t virt_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t wireguard_etc_t:dir { getattr open read search watch watch_reads };
+allow tailscaled_t wireguard_etc_t:file getattr;
+alsa_read_config(tailscaled_t)
+apache_exec_modules(tailscaled_t)
+apache_read_config(tailscaled_t)
+auth_getattr_shadow(tailscaled_t)
+auth_rw_shadow_lock(tailscaled_t)
+bind_read_config(tailscaled_t)
+bluetooth_read_config(tailscaled_t)
+clock_read_adjtime(tailscaled_t)
+container_read_config(tailscaled_t)
+corecmd_check_exec_bin_files(tailscaled_t)
+corecmd_search_bin(tailscaled_t)
+corenet_tcp_bind_generic_node(tailscaled_t)
+corenet_tcp_connect_http_port(tailscaled_t)
+corenet_udp_bind_generic_node(tailscaled_t)
+cron_read_system_spool(tailscaled_t)
+cups_read_config(tailscaled_t)
+cups_read_rw_config(tailscaled_t)
+dbus_list_system_bus_runtime(tailscaled_t)
+dbus_read_config(tailscaled_t)
+dbus_system_bus_client(tailscaled_t)
+dev_read_sysfs(tailscaled_t)
+dev_rw_tpm(tailscaled_t)
+dnsmasq_read_config(tailscaled_t)
+files_read_etc_files(tailscaled_t)
+files_read_etc_runtime_files(tailscaled_t)
+files_search_mnt(tailscaled_t)
+files_search_var_lib(tailscaled_t)
+firewalld_read_config_files(tailscaled_t)
+fs_rw_binfmt_misc_dirs(tailscaled_t)
+init_getattr_generic_units_files(tailscaled_t)
+init_read_generic_units_symlinks(tailscaled_t)
+init_read_state(tailscaled_t)
+iptables_exec(tailscaled_t)
+kerberos_read_config(tailscaled_t)
+kernel_read_net_sysctls(tailscaled_t)
+kernel_read_network_state(tailscaled_t)
+kernel_read_network_state_symlinks(tailscaled_t)
+kernel_read_system_state(tailscaled_t)
+kernel_rw_net_sysctls(tailscaled_t)
+kernel_search_fs_sysctls(tailscaled_t)
+logging_read_audit_config(tailscaled_t)
+logging_read_syslog_config(tailscaled_t)
+lvm_read_config(tailscaled_t)
+miscfiles_read_generic_certs(tailscaled_t)
+modutils_read_module_config(tailscaled_t)
+ppp_initrc_domtrans(tailscaled_t)
+ppp_read_rw_config(tailscaled_t)
+rpc_read_exports(tailscaled_t)
+rsync_read_config(tailscaled_t)
+samba_read_config(tailscaled_t)
+sasl_read_keytab(tailscaled_t)
+seutil_read_bin_policy(tailscaled_t)
+seutil_read_default_contexts(tailscaled_t)
+seutil_read_file_contexts(tailscaled_t)
+ssh_read_server_keys(tailscaled_t)
+systemd_getattr_updated_runtime(tailscaled_t)
+systemd_read_user_runtime_units_files(tailscaled_t)
+virt_read_config(tailscaled_t)
+xserver_xsession_entry_type(tailscaled_t)
