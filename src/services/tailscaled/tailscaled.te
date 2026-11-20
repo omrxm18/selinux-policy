@@ -4,7 +4,6 @@ gen_require(`
     type staff_t;
     type system_cron_spool_t;
     type saslauthd_keytab_t;
-    type plymouthd_unit_t;
     type NetworkManager_etc_rw_t;
     type tailscaled_t;
     type tls_privkey_t;
@@ -121,7 +120,6 @@ allow tailscaled_t lvm_etc_t:dir { getattr open read search watch watch_reads };
 allow tailscaled_t lvm_metadata_t:dir { getattr open read watch watch_reads };
 allow tailscaled_t modules_conf_t:dir { getattr open read search watch watch_reads };
 allow tailscaled_t net_conf_t:dir { watch watch_reads };
-allow tailscaled_t plymouthd_unit_t:file getattr;
 allow tailscaled_t policy_config_t:dir { getattr open read search watch watch_reads };
 allow tailscaled_t pppd_etc_rw_t:dir { getattr open read watch watch_reads };
 allow tailscaled_t pppd_etc_t:dir { getattr open read search watch watch_reads };

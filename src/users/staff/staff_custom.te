@@ -130,7 +130,6 @@ gen_require(`
 	class cap_userns { sys_admin sys_chroot };
 	class netlink_route_socket { read write };
 	class unix_stream_socket { connectto getattr ioctl read write };
-	class bluetooth_socket { read write setopt ioctl };
 	class security { read_policy setenforce };
 	class tcp_socket { node_bind name_bind };
 	class udp_socket { name_bind };

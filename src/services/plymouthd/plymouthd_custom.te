@@ -6,6 +6,7 @@ gen_require(`
 	type usr_t;
 	type efivarfs_t;
 	type initrc_runtime_t;
+	type plymouth_t;
 
 	class process signal;
 	class capability sys_chroot;
@@ -19,3 +20,5 @@ allow plymouthd_t usr_t:file map;
 allow plymouthd_t efivarfs_t:dir search;
 allow plymouthd_t efivarfs_t:file { open read };
 allow plymouthd_t initrc_runtime_t:dir search;
+allow plymouthd_t self:netlink_kobject_uevent_socket { getattr read write setopt getopt bind create };
+allow plymouth_t init_t:unix_stream_socket connectto;
