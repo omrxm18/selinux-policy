@@ -129,6 +129,8 @@ gen_require(`
     type default_t;
     type git_home_t;
     type local_login_t;
+    type alsa_etc_t;
+    type v4l_device_t;
     type wireplumber_t;
 
     class capability setuid;
