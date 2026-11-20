@@ -44,6 +44,8 @@ gen_require(`
     type cupsd_etc_t;
     type pppd_etc_rw_t;
     type samba_etc_t;
+    type NetworkManager_t;
+
     class netlink_netfilter_socket { bind create getopt read write };
     class tun_socket { relabelfrom relabelto };
     class process getsched;
@@ -51,6 +53,8 @@ gen_require(`
     class netlink_generic_socket { bind create getattr getopt read setopt write };
     class file { getattr open read };
     class dir { getattr open read search watch watch_reads };
+    class dbus send_msg;
+    class fifo_file { getattr write };
     class sock_file getattr;
     class tcp_socket name_bind;
 ')
@@ -64,9 +68,6 @@ files_type(tailscaled_runtime_t)
 
 type tailscaled_var_lib_t;
 files_type(tailscaled_var_lib_t)
-
-# remove once the AVCs are sorted out
-permissive tailscaled_t;
 
 allow tailscaled_t self:capability { net_admin net_raw net_bind_service };
 allow tailscaled_t self:process { signal_perms };
@@ -142,6 +143,9 @@ allow tailscaled_t virt_etc_rw_t:dir { getattr open read search watch watch_read
 allow tailscaled_t virt_etc_t:dir { getattr open read search watch watch_reads };
 allow tailscaled_t wireguard_etc_t:dir { getattr open read search watch watch_reads };
 allow tailscaled_t wireguard_etc_t:file getattr;
+allow tailscaled_t NetworkManager_t:dbus send_msg;
+allow tailscaled_t self:fifo_file { getattr write };
+
 alsa_read_config(tailscaled_t)
 apache_exec_modules(tailscaled_t)
 apache_read_config(tailscaled_t)
