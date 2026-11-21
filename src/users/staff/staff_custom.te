@@ -116,7 +116,7 @@ gen_require(`
 
 	class process { execmem getcap getsched ptrace sigchld signal transition };
 	class netlink_route_socket { nlmsg_write read write };
-	class cap_userns { net_admin setpcap sys_admin sys_chroot };
+	class cap_userns { sys_admin sys_chroot };
 	class tcp_socket { name_bind name_connect node_bind };
 	class fd use;
 	class system { start status reload };
@@ -128,13 +128,12 @@ gen_require(`
 	class process2 { nnp_transition nosuid_transition };
 	class service { status start };
 	class fifo_file { write getattr read ioctl };
-	class cap_userns { sys_admin sys_chroot };
 	class netlink_route_socket { read write };
 	class unix_stream_socket { connectto getattr ioctl read write };
 	class security { read_policy setenforce };
 	class tcp_socket { node_bind name_bind };
 	class udp_socket { name_bind };
-	class capability { sys_nice net_admin chown dac_override kill setgid setuid };
+	class capability { net_admin chown kill };
 	class lnk_file { getattr read  watch create setattr };
 	class process { execmem getcap ptrace transition sigchld };
 	class shm { associate getattr read unix_read unix_write write };
@@ -160,7 +159,6 @@ allow staff_wm_t devlog_t:sock_file write;
 allow staff_wm_t init_t:dir search;
 allow staff_wm_t init_t:file { getattr ioctl open read };
 allow staff_wm_t init_t:unix_dgram_socket sendto;
-allow staff_wm_t self:capability sys_nice;
 allow staff_wm_t syslogd_runtime_t:dir search;
 allow staff_wm_t var_lib_t:file { getattr open read };
 allow staff_wm_t wm_tmpfs_t:file execmod;
@@ -199,7 +197,6 @@ allow staff_wm_t mozilla_home_t:file { create getattr open read rename setattr u
 allow staff_wm_t nsfs_t:file getattr;
 allow staff_wm_t proc_net_t:lnk_file read;
 allow staff_wm_t root_t:dir mounton;
-allow staff_wm_t self:cap_userns { net_admin setpcap sys_admin };
 allow staff_wm_t self:netlink_route_socket nlmsg_write;
 allow staff_wm_t self:user_namespace create;
 allow staff_wm_t staff_systemd_t:unix_dgram_socket sendto;
@@ -281,7 +278,7 @@ allow staff_t node_t:tcp_socket node_bind;
 allow { staff_dbusd_t user_dbusd_t } var_lib_t:dir watch;
 allow staff_t systemd_user_tmpfs_t:file ioctl;
 allow staff_t self:cap_userns { sys_admin sys_chroot };
-allow staff_t self:capability { chown dac_override kill setgid setuid };
+allow staff_t self:capability { chown kill };
 allow staff_t self:io_uring allowed;
 allow staff_t self:process execmem;
 allow staff_t self:user_namespace create;
