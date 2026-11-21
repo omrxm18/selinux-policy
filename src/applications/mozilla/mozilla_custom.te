@@ -29,6 +29,7 @@ gen_require(`
 	class netlink_route_socket nlmsg_write;
 	class process { execmem getcap ptrace };
 	class unix_stream_socket connectto;
+	class filesystem quotaget;
 ')
 
 fs_search_cgroup_dirs(mozilla_t)
@@ -79,6 +80,7 @@ allow mozilla_t unreserved_port_t:tcp_socket name_connect;
 # p11-kit CA trust store (mapped by Firefox, e.g. NSS module).
 allow mozilla_t etc_t:file map;
 
+allow mozilla_t fs_t:filesystem quotaget;
 allow mozilla_t self:process getcap;
 
 # Userdb lookup used by the crash reporter.
