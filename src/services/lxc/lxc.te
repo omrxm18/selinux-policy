@@ -61,6 +61,9 @@ gen_require(`
 	type dns_port_t;
 	type llmnr_port_t;
 	type howl_port_t;
+	type shell_exec_t;
+	type bin_t;
+	type staff_t;
 
 	class chr_file { read write open };
 	class dir { search write add_name create getattr remove_name };
@@ -92,9 +95,13 @@ fs_mounton_fusefs(lxc_t)
 fs_mounton_hugetlbfs_dirs(lxc_t)
 fs_unmount_xattr_fs(lxc_t)
 
+miscfiles_getattr_localization(lxc_t)
+miscfiles_read_localization(lxc_t)
+
 files_search_tmp(lxc_t)
 logging_search_logs(lxc_t)
 userdom_search_user_home_dirs(lxc_t)
+userdom_list_user_home_content(lxc_t)
 
 kernel_mount_proc(lxc_t)
 kernel_read_kernel_sysctls(lxc_t)
@@ -103,6 +110,8 @@ kernel_remount_proc(lxc_t)
 files_mounton_runtime_dirs(lxc_t)
 files_mounton_tmp(lxc_t)
 files_search_mnt(lxc_t)
+files_search_boot(lxc_t)
+files_search_kernel_modules(lxc_t)
 
 term_list_ptys(lxc_t)
 term_mount_devpts(lxc_t)
@@ -116,6 +125,13 @@ userdom_search_user_runtime_root(lxc_t)
 
 kernel_search_fs_sysctls(lxc_t)
 kernel_mounton_kernel_sysctl_files(lxc_t)
+kernel_read_system_state(lxc_t)
+
+corecmd_bin_entry_type(lxc_t)
+corecmd_search_bin(lxc_t)
+corecmd_shell_entry_type(lxc_t)
+
+modutils_exec(lxc_t)
 
 # container runtime
 allow lxc_t user_devpts_t:chr_file { read write getattr ioctl };
@@ -144,6 +160,7 @@ allow lxc_t self:netlink_kobject_uevent_socket { create getopt setopt };
 
 allow lxc_t self:bpf { prog_load prog_run };
 allow lxc_t self:process { signull sigkill signal setsched getcap };
+allow lxc_t self:fifo_file { read write getattr };
 
 allow lxc_t kernel_t:system module_request;
 allow lxc_t cgroup_t:dir { search write read open add_name remove_name rmdir create getattr setattr ioctl };
@@ -174,6 +191,16 @@ allow lxc_t sysctl_fs_t:file read;
 
 allow lxc_t staff_sudo_t:fd use;
 allow lxc_t sysadm_t:fd use;
+
+allow lxc_t shell_exec_t:file { map read execute };
+allow lxc_t lxc_exec_t:file execute_no_trans;
+
+allow lxc_t bin_t:dir { search getattr };
+allow lxc_t bin_t:lnk_file read;
+allow lxc_t bin_t:file execute_no_trans;
+
+allow lxc_t staff_t:fd use;
+allow lxc_t staff_t:fifo_file { ioctl write };
 
 allow lxc_t devpts_t:chr_file { getattr ioctl open read setattr write lock };
 allow lxc_t fusefs_t:filesystem { getattr remount };
