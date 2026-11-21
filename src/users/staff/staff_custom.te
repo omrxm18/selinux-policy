@@ -295,6 +295,7 @@ allow staff_t security_t:security read_policy;
 allow staff_t wireless_device_t:chr_file write;
 allow staff_t fuse_device_t:chr_file { open read write };
 allow staff_t staff_systemd_t:process getsched;
+allow staff_t man_t:file map;
 
 #============== staff_dbuds_t ==============
 allow staff_dbusd_t staff_wm_t:fd use;
