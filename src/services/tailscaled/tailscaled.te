@@ -5,7 +5,6 @@ gen_require(`
     type system_cron_spool_t;
     type saslauthd_keytab_t;
     type NetworkManager_etc_rw_t;
-    type tailscaled_t;
     type tls_privkey_t;
     type lvm_etc_t;
     type initrc_t;
