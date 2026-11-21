@@ -1,0 +1,4 @@
+/usr/bin/lxc-.*           --        gen_context(system_u:object_r:lxc_exec_t,s0)
+/usr/share/lxc(/.*)?                gen_context(system_u:object_r:lxc_files_t,s0)
+/var/lib/lxc/[^/]+/rootfs(/.*)?     gen_context(system_u:object_r:lxc_files_t,s0)
+/usr/lib/lxc/rootfs(/.*)?     gen_context(system_u:object_r:lxc_files_t,s0)

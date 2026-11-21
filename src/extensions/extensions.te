@@ -126,6 +126,10 @@ gen_require(`
     type xdg_data_t;
     type xdg_pictures_t;
     type systemd_user_unit_t;
+    type file_context_t;
+    type policy_config_t;
+    type semanage_store_t;
+    type auditctl_t;
     type default_t;
     type git_home_t;
     type local_login_t;
@@ -241,6 +245,12 @@ systemd_get_user_manager_units_status(policykit_t)
 
 #============= semanage_t ==============
 allow semanage_t staff_t:fifo_file { getattr write };
+dontaudit semanage_t selinux_config_t:file { relabelfrom relabelto };
+dontaudit semanage_t file_context_t:file { relabelfrom relabelto };
+dontaudit semanage_t policy_config_t:file { relabelfrom relabelto };
+dontaudit semanage_t semanage_store_t:file { relabelfrom relabelto };
+
+allow auditctl_t auditd_t:process signal;
 
 #============= system_dbusd_t ==============
 init_get_system_status(system_dbusd_t)

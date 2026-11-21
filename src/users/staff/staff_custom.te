@@ -94,6 +94,7 @@ gen_require(`
 	type tmpfs_t;
 	type udev_runtime_t;
 	type user_dbusd_t;
+	type lxc_t;
 
 	class chr_file {
 		getattr ioctl map open read write
@@ -113,7 +114,7 @@ gen_require(`
 		link lock map mounton open read rename setattr unlink watch write
 	};
 
-	class process { execmem getcap getsched ptrace sigchld transition };
+	class process { execmem getcap getsched ptrace sigchld signal transition };
 	class netlink_route_socket { nlmsg_write read write };
 	class cap_userns { net_admin setpcap sys_admin sys_chroot };
 	class tcp_socket { name_bind name_connect node_bind };
@@ -241,7 +242,7 @@ allow system_dbusd_t staff_t:fifo_file write;
 allow staff_sudo_t systemd_userdbd_runtime_t:dir { getattr open read search };
 allow staff_sudo_t systemd_userdbd_runtime_t:lnk_file read;
 allow staff_sudo_t systemd_userdbd_runtime_t:sock_file { getattr read write };
-
+allow staff_sudo_t lxc_t:process signal;
 allow staff_sudo_t xdm_t:unix_stream_socket connectto;
 allow staff_sudo_t self:capability net_admin;
 

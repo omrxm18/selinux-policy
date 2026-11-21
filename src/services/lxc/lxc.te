@@ -1,0 +1,317 @@
+policy_module(lxc, 1.0)
+
+type lxc_t;
+type lxc_exec_t;
+type lxc_files_t;
+type lxc_container_runtime_t;
+
+domain_type(lxc_t)
+domain_type(lxc_container_runtime_t)
+files_type(lxc_files_t)
+domain_entry_file(lxc_t, lxc_exec_t, lxc_container_runtime_t)
+
+role sysadm_r types { lxc_t lxc_container_runtime_t };
+
+gen_require(`
+    type sysadm_t;
+	role sysadm_r;
+	type container_var_lib_t;
+	type container_runtime_t;
+	type user_devpts_t;
+	type staff_sudo_t;
+	type init_t;
+	type init_runtime_t;
+	type systemd_unit_t;
+	type ptmx_t;
+	type sysfs_t;
+	type nsfs_t;
+	type tmpfs_t;
+	type cgroup_t;
+	type sysctl_net_t;
+	type kernel_t;
+	type proc_t;
+	type bpf_t;
+	type configfs_t;
+	type debugfs_t;
+	type efivarfs_t;
+	type pstore_t;
+	type tracefs_t;
+	type binfmt_misc_fs_t;
+	type devpts_t;
+	type proc_net_t;
+	type fusefs_t;
+	type sysctl_fs_t;
+	type sysctl_kernel_t;
+	type sysctl_t;
+	type root_t;
+	type sysctl_net_unix_t;
+	type proc_psi_t;
+	type proc_kmsg_t;
+	type proc_net_t;
+	type device_t, user_runtime_t, dosfs_t, home_root_t, user_home_t;
+	type sysctl_vm_t;
+	type sysctl_irq_t;
+	type hugetlbfs_t;
+	type proc_kcore_t;
+	type system_map_t;
+	type mtrr_device_t;
+	type fs_t;
+	type staff_systemd_t;
+	type node_t;
+	type dns_port_t;
+	type llmnr_port_t;
+	type howl_port_t;
+
+	class chr_file { read write open };
+	class dir { search write add_name create getattr remove_name };
+	class file { create read write open lock getattr map };
+	class bpf { prog_load prog_run };
+	class system module_request;
+	class sock_file create;
+	class fd use;
+')
+
+domain_auto_transition_pattern(sysadm_t, lxc_exec_t, lxc_t)
+domain_auto_transition_pattern(lxc_t, lxc_files_t, lxc_container_runtime_t)
+
+manage_dirs_pattern(lxc_t, container_var_lib_t, container_var_lib_t)
+manage_files_pattern(lxc_t, container_var_lib_t, container_var_lib_t)
+files_var_lib_filetrans(lxc_t, container_var_lib_t, { dir file lnk_file })
+
+manage_dirs_pattern(lxc_t, lxc_files_t, lxc_files_t)
+manage_files_pattern(lxc_t, lxc_files_t, lxc_files_t)
+manage_lnk_files_pattern(lxc_t, lxc_files_t, lxc_files_t)
+can_exec(lxc_t, lxc_files_t)
+
+fs_manage_tmpfs_chr_files(lxc_t)
+fs_manage_tmpfs_symlinks(lxc_t)
+fs_mounton_tmpfs(lxc_t)
+fs_remount_tmpfs(lxc_t)
+fs_getattr_xattr_fs(lxc_t)
+fs_mounton_fusefs(lxc_t)
+fs_mounton_hugetlbfs_dirs(lxc_t)
+fs_unmount_xattr_fs(lxc_t)
+
+files_search_tmp(lxc_t)
+logging_search_logs(lxc_t)
+userdom_search_user_home_dirs(lxc_t)
+
+kernel_mount_proc(lxc_t)
+kernel_read_kernel_sysctls(lxc_t)
+kernel_remount_proc(lxc_t)
+
+files_mounton_runtime_dirs(lxc_t)
+files_mounton_tmp(lxc_t)
+files_search_mnt(lxc_t)
+
+term_list_ptys(lxc_t)
+term_mount_devpts(lxc_t)
+
+dev_mounton_sysfs_dirs(lxc_t)
+dev_read_urand(lxc_t)
+
+selinux_mounton_dirs(lxc_t)
+dev_list_sysfs(lxc_t)
+userdom_search_user_runtime_root(lxc_t)
+
+kernel_search_fs_sysctls(lxc_t)
+kernel_mounton_kernel_sysctl_files(lxc_t)
+
+# container runtime
+allow lxc_t user_devpts_t:chr_file { read write getattr ioctl };
+allow lxc_t container_runtime_t:dir { search write add_name create };
+allow lxc_t container_runtime_t:file { create read write open lock };
+allow lxc_t lxc_files_t:file mounton;
+allow lxc_t lxc_files_t:dir mounton;
+allow lxc_t lxc_files_t:filesystem { mount unmount remount associate };
+
+allow lxc_t lxc_container_runtime_t:process { sigkill signull signal sigstop getattr rlimitinh };
+allow lxc_t lxc_container_runtime_t:dir { search getattr read open };
+allow lxc_t lxc_container_runtime_t:file { read open getattr };
+allow lxc_t lxc_container_runtime_t:lnk_file { read getattr };
+
+# caps
+allow lxc_t self:capability { dac_override sys_admin net_admin setgid setpcap sys_chroot };
+allow lxc_t self:capability2 bpf;
+
+# sockets
+allow lxc_t self:netlink_route_socket { create setopt bind getattr write read nlmsg_write nlmsg_read };
+allow lxc_t self:udp_socket { create ioctl };
+allow lxc_t self:tcp_socket { create ioctl };
+allow lxc_t self:unix_stream_socket connectto;
+allow lxc_t self:unix_dgram_socket { create ioctl bind getopt setopt };
+allow lxc_t self:netlink_kobject_uevent_socket { create getopt setopt };
+
+allow lxc_t self:bpf { prog_load prog_run };
+allow lxc_t self:process { signull sigkill signal setsched getcap };
+
+allow lxc_t kernel_t:system module_request;
+allow lxc_t cgroup_t:dir { search write read open add_name remove_name rmdir create getattr setattr ioctl };
+allow lxc_t cgroup_t:file { write read open getattr ioctl };
+allow lxc_t cgroup_t:filesystem { getattr mount };
+
+allow lxc_t ptmx_t:chr_file { read write open };
+allow lxc_t sysfs_t:file { read open getattr ioctl };
+allow lxc_t sysfs_t:lnk_file read;
+
+allow lxc_t tmpfs_t:file { write map read getattr create mounton open setattr ioctl execute execute_no_trans };
+allow lxc_t tmpfs_t:dir { search write read open add_name remove_name create rmdir watch };
+allow lxc_t tmpfs_t:sock_file create;
+allow lxc_t tmpfs_t:filesystem { mount remount };
+
+allow lxc_t systemd_unit_t:dir getattr;
+allow lxc_t nsfs_t:file { getattr read open };
+
+allow lxc_t init_t:file { read open getattr };
+allow lxc_t init_t:dir search;
+allow lxc_t init_runtime_t:dir search;
+
+allow lxc_t sysctl_net_t:file { open read write };
+allow lxc_t sysctl_net_t:dir { search getattr read mounton open };
+allow lxc_t sysctl_t:dir { mounton read };
+allow lxc_t sysctl_t:file { getattr read mounton open };
+allow lxc_t sysctl_fs_t:file read;
+
+allow lxc_t staff_sudo_t:fd use;
+allow lxc_t sysadm_t:fd use;
+
+allow lxc_t devpts_t:chr_file { getattr ioctl open read setattr write lock };
+allow lxc_t fusefs_t:filesystem { getattr remount };
+allow lxc_t sysfs_t:filesystem { mount unmount };
+allow lxc_t proc_t:filesystem unmount;
+allow lxc_t proc_net_t:lnk_file read;
+
+allow lxc_t { proc_t root_t sysctl_kernel_t binfmt_misc_fs_t bpf_t cgroup_t 
+				configfs_t devpts_t debugfs_t efivarfs_t pstore_t tracefs_t }:dir { mounton read };
+
+dontaudit lxc_t { device_t user_runtime_t dosfs_t home_root_t user_home_t }:dir mounton;
+dontaudit lxc_t self:capability { sys_module dac_read_search fsetid };
+dontaudit lxc_t self:capability2 perfmon;
+
+
+#=============== lxc_container_runtime_t =============== # runtime permissions inside the container
+manage_dirs_pattern(lxc_container_runtime_t, lxc_files_t, lxc_files_t)
+manage_files_pattern(lxc_container_runtime_t, lxc_files_t, lxc_files_t)
+manage_lnk_files_pattern(lxc_container_runtime_t, lxc_files_t, lxc_files_t)
+manage_sock_files_pattern(lxc_container_runtime_t, lxc_files_t, lxc_files_t)
+manage_fifo_files_pattern(lxc_container_runtime_t, lxc_files_t, lxc_files_t)
+can_exec(lxc_container_runtime_t, lxc_files_t)
+
+kernel_mounton_sysctl_dirs(lxc_container_runtime_t)
+kernel_mounton_sysctl_files(lxc_container_runtime_t)
+
+allow lxc_container_runtime_t lxc_files_t:dir watch;
+
+allow lxc_container_runtime_t { lxc_t sysadm_t staff_sudo_t }:fd use;
+allow lxc_container_runtime_t user_devpts_t:chr_file { read write getattr ioctl };
+
+# caps
+allow lxc_container_runtime_t self:capability { dac_override setgid setpcap sys_chroot sys_admin net_admin sys_resource ipc_lock sys_boot dac_read_search
+														setfcap sys_ptrace mknod setfcap fsetid setuid net_bind_service chown kill fowner sys_tty_config audit_write};
+allow lxc_container_runtime_t self:capability2 { checkpoint_restore bpf perfmon audit_read };
+allow lxc_container_runtime_t self:process { signull sigkill signal sigstop getsched setsched getcap setcap setrlimit setpgid };
+allow lxc_container_runtime_t self:bpf { prog_load prog_run map_create map_read map_write };
+allow lxc_container_runtime_t self:cap_userns { sys_admin sys_ptrace };
+
+# sockets
+allow lxc_container_runtime_t self:unix_stream_socket { create_stream_socket_perms connectto };
+allow lxc_container_runtime_t self:unix_dgram_socket { create_socket_perms sendto };
+allow lxc_container_runtime_t self:netlink_route_socket { create setopt getopt bind getattr write read nlmsg_write nlmsg_read };
+allow lxc_container_runtime_t self:udp_socket { create ioctl };
+allow lxc_container_runtime_t self:tcp_socket { create ioctl };
+allow lxc_container_runtime_t self:netlink_kobject_uevent_socket { create getopt setopt };
+allow lxc_container_runtime_t self:udp_socket { create ioctl read write bind setopt getopt getattr };
+allow lxc_container_runtime_t self:tcp_socket { create ioctl read write bind setopt getopt getattr listen accept };
+allow lxc_container_runtime_t self:netlink_audit_socket { create getattr setopt read write getopt bind nlmsg_relay nlmsg_read nlmsg_write };
+allow lxc_container_runtime_t self:netlink_generic_socket { create getopt setopt bind getattr read write };
+allow lxc_container_runtime_t self:netlink_netfilter_socket { create getopt setopt bind getattr read write };
+allow lxc_container_runtime_t self:netlink_kobject_uevent_socket { create getopt setopt bind getattr read };
+
+# port management and nodes
+allow lxc_container_runtime_t node_t:{ udp_socket tcp_socket } node_bind;
+allow lxc_container_runtime_t { dns_port_t llmnr_port_t howl_port_t }:udp_socket name_bind;
+allow lxc_container_runtime_t { dns_port_t llmnr_port_t }:tcp_socket name_bind;
+
+# systemd socket activation inside the container
+allow lxc_container_runtime_t self:fifo_file { read write getattr ioctl };
+
+# keyrings created by lxc-start before the transition
+allow lxc_container_runtime_t self:key { create view read write search link setattr };
+allow lxc_container_runtime_t lxc_t:key write;
+
+# interaction with outer lxc types
+allow lxc_container_runtime_t lxc_files_t:file entrypoint;
+allow lxc_container_runtime_t lxc_files_t:dir mounton;
+allow lxc_container_runtime_t lxc_t:key { view read write search link setattr };
+
+# cgroup
+allow lxc_container_runtime_t cgroup_t:dir { search write read open add_name remove_name rmdir create getattr setattr ioctl watch };
+allow lxc_container_runtime_t cgroup_t:file { write read open getattr setattr ioctl create watch };
+allow lxc_container_runtime_t cgroup_t:filesystem getattr;
+
+# tmpfs
+allow lxc_container_runtime_t tmpfs_t:file { write map read getattr create open setattr ioctl link unlink execute execute_no_trans rename watch };
+allow lxc_container_runtime_t tmpfs_t:dir { search write read open add_name remove_name create rmdir watch mounton getattr setattr };
+allow lxc_container_runtime_t tmpfs_t:sock_file { create getattr setattr read write unlink };
+allow lxc_container_runtime_t tmpfs_t:fifo_file { create getattr read write open unlink };
+allow lxc_container_runtime_t tmpfs_t:chr_file { read write open getattr ioctl unlink create setattr };
+allow lxc_container_runtime_t tmpfs_t:filesystem { mount unmount getattr };
+allow lxc_container_runtime_t tmpfs_t:blk_file create;
+fs_manage_tmpfs_symlinks(lxc_container_runtime_t)
+
+# terminals
+allow lxc_container_runtime_t ptmx_t:chr_file { read write open };
+allow lxc_container_runtime_t devpts_t:chr_file { getattr ioctl open read setattr write lock watch watch_reads };
+allow lxc_container_runtime_t devpts_t:filesystem remount;
+term_list_ptys(lxc_container_runtime_t)
+
+# /proc, /sys
+allow lxc_container_runtime_t proc_t:dir read;
+allow lxc_container_runtime_t proc_t:file read;
+allow lxc_container_runtime_t proc_t:filesystem { getattr unmount };
+allow lxc_container_runtime_t proc_net_t:lnk_file read;
+allow lxc_container_runtime_t proc_kmsg_t:file getattr;
+allow lxc_container_runtime_t proc_psi_t:dir search;
+allow lxc_container_runtime_t proc_psi_t:file { open read getattr };
+allow lxc_container_runtime_t kernel_t:key search;
+
+allow lxc_container_runtime_t sysfs_t:file { read open getattr ioctl map };
+allow lxc_container_runtime_t sysfs_t:lnk_file read;
+fs_getattr_xattr_fs(lxc_container_runtime_t)
+
+dev_list_sysfs(lxc_container_runtime_t)
+dev_read_urand(lxc_container_runtime_t)
+kernel_read_kernel_sysctls(lxc_container_runtime_t)
+kernel_search_fs_sysctls(lxc_container_runtime_t)
+kernel_mount_proc(lxc_container_runtime_t)
+kernel_rw_vm_sysctls(lxc_container_runtime_t)
+
+kernel_read_fs_sysctls(lxc_container_runtime_t)
+allow lxc_container_runtime_t sysctl_t:dir read;
+allow lxc_container_runtime_t sysctl_t:file { getattr read open };
+allow lxc_container_runtime_t sysctl_fs_t:file { read open getattr write };
+allow lxc_container_runtime_t sysctl_net_t:dir { search getattr read open };
+allow lxc_container_runtime_t sysctl_net_t:file { open read write };
+allow lxc_container_runtime_t sysctl_vm_t:file { open read getattr };
+allow lxc_container_runtime_t sysctl_net_unix_t:file { open read getattr ioctl write };
+allow lxc_container_runtime_t sysctl_net_unix_t:dir search;
+allow lxc_container_runtime_t sysctl_net_t:file getattr;
+allow lxc_container_runtime_t sysctl_vm_t:dir search;
+allow lxc_container_runtime_t sysctl_vm_t:file write;
+allow lxc_container_runtime_t sysctl_kernel_t:file write;
+
+allow lxc_container_runtime_t nsfs_t:file { getattr read open };
+
+# allow namespace creation needed for systemd unit isolation, etc..
+allow lxc_container_runtime_t self:user_namespace create;
+allow lxc_container_runtime_t { proc_t sysfs_t tmpfs_t devpts_t cgroup_t fs_t hugetlbfs_t }:filesystem { mount unmount remount getattr };
+allow lxc_container_runtime_t sysfs_t:lnk_file { read getattr };
+allow lxc_container_runtime_t tmpfs_t:{ dir file } mounton;
+allow lxc_container_runtime_t { sysctl_t sysctl_kernel_t }:{ dir file } mounton;
+allow lxc_container_runtime_t proc_t:file { open getattr read ioctl };
+allow lxc_container_runtime_t { proc_t sysfs_t sysctl_irq_t }:dir mounton;
+allow lxc_container_runtime_t { cgroup_t proc_kmsg_t proc_kcore_t system_map_t mtrr_device_t }:file mounton;
+allow lxc_container_runtime_t self:cap_userns { sys_admin sys_ptrace };
+
+allow lxc_container_runtime_t sysctl_irq_t:dir getattr;
+allow lxc_container_runtime_t { system_map_t proc_kcore_t mtrr_device_t }:file getattr;
