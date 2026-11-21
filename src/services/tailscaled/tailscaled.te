@@ -43,15 +43,19 @@ gen_require(`
     type pppd_etc_rw_t;
     type samba_etc_t;
     type NetworkManager_t;
+    type kmod_exec_t;
+    type kernel_t;
 
     class netlink_netfilter_socket { bind create getopt read write };
     class tun_socket { relabelfrom relabelto };
     class process getsched;
     class fifo_file read;
+    class system module_request;
     class netlink_generic_socket { bind create getattr getopt read setopt write };
-    class file { getattr open read };
+    class file { getattr open read execute execute_no_trans };
     class dir { getattr open read search watch watch_reads };
     class dbus send_msg;
+    class rawip_socket create;
     class fifo_file { getattr write };
     class sock_file getattr;
     class tcp_socket name_bind;
@@ -68,7 +72,7 @@ type tailscaled_var_lib_t;
 files_type(tailscaled_var_lib_t)
 
 allow tailscaled_t self:capability { net_admin net_raw net_bind_service };
-allow tailscaled_t self:process { signal_perms };
+allow tailscaled_t self:process { signal_perms getsched };
 allow tailscaled_t self:unix_stream_socket create_stream_socket_perms;
 allow tailscaled_t self:unix_dgram_socket create_socket_perms;
 allow tailscaled_t self:tcp_socket create_stream_socket_perms;
@@ -76,6 +80,9 @@ allow tailscaled_t self:udp_socket create_socket_perms;
 allow tailscaled_t self:tun_socket create_socket_perms;
 allow tailscaled_t self:netlink_route_socket create_netlink_socket_perms;
 allow tailscaled_t self:netlink_netfilter_socket create_socket_perms;
+allow tailscaled_t self:netlink_generic_socket { bind create getattr getopt read setopt write };
+allow tailscaled_t self:fifo_file { getattr write read };
+allow tailscaled_t self:rawip_socket create;
 
 manage_dirs_pattern(tailscaled_t, tailscaled_runtime_t, tailscaled_runtime_t)
 manage_sock_files_pattern(tailscaled_t, tailscaled_runtime_t, tailscaled_runtime_t)
@@ -124,9 +131,6 @@ allow tailscaled_t pppd_etc_rw_t:dir { getattr open read watch watch_reads };
 allow tailscaled_t pppd_etc_t:dir { getattr open read search watch watch_reads };
 allow tailscaled_t samba_etc_t:dir { getattr open read search watch watch_reads };
 allow tailscaled_t saslauthd_keytab_t:dir { getattr open read search watch watch_reads };
-allow tailscaled_t self:fifo_file read;
-allow tailscaled_t self:netlink_generic_socket { bind create getattr getopt read setopt write };
-allow tailscaled_t self:process getsched;
 allow tailscaled_t selinux_config_t:dir { read watch watch_reads };
 allow tailscaled_t system_cron_spool_t:dir { getattr open read search watch watch_reads };
 allow tailscaled_t systemd_unit_t:dir { getattr open read search watch watch_reads };
@@ -141,7 +145,8 @@ allow tailscaled_t virt_etc_t:dir { getattr open read search watch watch_reads }
 allow tailscaled_t wireguard_etc_t:dir { getattr open read search watch watch_reads };
 allow tailscaled_t wireguard_etc_t:file getattr;
 allow tailscaled_t NetworkManager_t:dbus send_msg;
-allow tailscaled_t self:fifo_file { getattr write };
+allow tailscaled_t kernel_t:system module_request;
+allow tailscaled_t kmod_exec_t:file { read open execute };
 
 alsa_read_config(tailscaled_t)
 apache_exec_modules(tailscaled_t)
