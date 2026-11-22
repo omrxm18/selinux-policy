@@ -296,6 +296,9 @@ allow staff_t wireless_device_t:chr_file write;
 allow staff_t fuse_device_t:chr_file { open read write };
 allow staff_t staff_systemd_t:process getsched;
 allow staff_t man_t:file map;
+allow staff_t usb_device_t:chr_file { getattr open read write ioctl };
+dev_rw_generic_usb_dev(staff_t)
+systemd_connect_machined(staff_t)
 
 #============== staff_dbuds_t ==============
 allow staff_dbusd_t staff_wm_t:fd use;
