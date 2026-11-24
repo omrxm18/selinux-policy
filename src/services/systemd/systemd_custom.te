@@ -138,6 +138,7 @@ gen_require(`
 	type xdm_runtime_t;
 	type xdm_var_lib_t;
 	type xdm_var_run_t;
+	type policykit_t;
 
 	class filesystem { getattr mount quotaget quotamod unmount };
 	class cap_userns sys_ptrace;
@@ -477,3 +478,5 @@ miscfiles_read_generic_certs(systemd_coredump_t)
 #============= systemd_generator_t ==============
 seutil_read_config(systemd_generator_t)
 allow systemd_generator_t xdg_cache_t:dir search;
+
+allow staff_systemd_t policykit_t:dbus send_msg;

@@ -7,8 +7,9 @@ gen_require(`
 	type systemd_machined_runtime_t;
 	type user_runtime_t;
 	type var_lib_t;
-	type gnome_xdg_config_t, xdg_config_t, xdg_data_t;
-
+	type gnome_xdg_config_t;
+	type xdg_config_t;
+	type xdg_data_t;
 	type devpts_t;
 	type device_t;
 	type etc_t;
@@ -20,14 +21,33 @@ gen_require(`
 	type systemd_machined_t;
 	type tmp_t, tmpfs_t;
 	type mozilla_tmpfs_t;
-	type transproxy_port_t, unreserved_port_t;
+	type transproxy_port_t;
+	type unreserved_port_t;
+	type xdg_cache_t;
+	type mesa_shader_cache_t;
+	type thunderbird_t;
+	type thunderbird_xdg_cache_t;
+	type session_dbusd_runtime_t;
+	type pulseaudio_tmp_t;
+	type pulseaudio_xdg_config_t;
+	type thunderbird_exec_t;
+	type thunderbird_tmp_t;
+	type thunderbird_tmpfs_t;
+	type random_device_t;
+	type dri_device_t;
+	type sysctl_fs_t;
+	type xdg_open_exec_t;
+	type staff_t;
+	type dma_device_t;
+	type dri_device_t;
+	type node_t;
 
 	class cap_userns { net_admin setpcap };
 	class dir { create mounton };
 	class file { getattr map mounton open read };
 	class filesystem { mount unmount };
 	class netlink_route_socket nlmsg_write;
-	class process { execmem getcap ptrace };
+	class process { execmem getcap ptrace transition sigchld };
 	class unix_stream_socket connectto;
 	class filesystem quotaget;
 ')
@@ -56,22 +76,23 @@ allow mozilla_t bubblewrap_exec_t:file { execute execute_no_trans map open read 
 
 # JIT and crash reporter memory access.
 allow mozilla_t self:process { execmem ptrace };
+allow { mozilla_t thunderbird_t } self:cap_userns { net_admin setpcap };
 
 # The crash reporter re-executes itself through bubblewrap
 # (--unshare-all).  Allow that self-sandbox with the specific
 # namespace and mount operations it uses.
 bubblewrap_exec(mozilla_t)
-allow mozilla_t self:cap_userns { net_admin setpcap };
-allow mozilla_t self:netlink_route_socket nlmsg_write;
-allow mozilla_t tmpfs_t:filesystem { mount unmount };
-allow mozilla_t tmpfs_t:dir { create mounton };
-allow mozilla_t devpts_t:filesystem mount;
-allow mozilla_t fs_t:filesystem unmount;
-allow mozilla_t root_t:dir mounton;
-allow mozilla_t tmp_t:dir mounton;
-allow mozilla_t nsfs_t:file getattr;
-allow mozilla_t sysctl_t:file { getattr open read };
+allow { mozilla_t thunderbird_t } self:netlink_route_socket nlmsg_write;
+allow { mozilla_t thunderbird_t } tmpfs_t:filesystem { mount unmount };
+allow { mozilla_t thunderbird_t } devpts_t:filesystem mount;
+allow { mozilla_t thunderbird_t } fs_t:filesystem unmount;
+allow { mozilla_t thunderbird_t } tmp_t:dir mounton;
+allow { mozilla_t thunderbird_t } tmpfs_t:dir { create mounton };
+allow { mozilla_t thunderbird_t } root_t:dir mounton;
+allow { mozilla_t thunderbird_t } sysctl_t:file { getattr open read };
 allow mozilla_t mozilla_tmpfs_t:file mounton;
+
+allow mozilla_t nsfs_t:file getattr;
 
 # allow other unruled ports
 allow mozilla_t transproxy_port_t:tcp_socket name_connect;
@@ -83,5 +104,95 @@ allow mozilla_t etc_t:file map;
 allow mozilla_t fs_t:filesystem quotaget;
 allow mozilla_t self:process getcap;
 
+
 # Userdb lookup used by the crash reporter.
 systemd_connect_machined(mozilla_t)
+
+# Thunderbird
+allow { mozilla_t thunderbird_t } mesa_shader_cache_t:file { lock getattr read open rename write };
+allow thunderbird_t mesa_shader_cache_t:dir { create read getattr add_name remove_name };
+allow mozilla_t thunderbird_xdg_cache_t:dir search;
+
+allow { thunderbird_t mozilla_t } { xdg_cache_t xdg_config_t }:file { read write };
+
+allow thunderbird_t xdg_cache_t:file { open lock getattr };
+allow thunderbird_t { xdg_cache_t xdg_config_t }:dir search;
+
+allow thunderbird_t session_dbusd_runtime_t:dir { getattr read write };
+allow thunderbird_t session_dbusd_runtime_t:sock_file { getattr write };
+allow thunderbird_t systemd_user_runtime_t:dir { search getattr };
+allow thunderbird_t systemd_user_runtime_t:file { read write open map };
+
+allow thunderbird_t bubblewrap_exec_t:file { read open map execute execute_no_trans };
+allow thunderbird_t thunderbird_exec_t:file { getattr execute execute_no_trans };
+allow thunderbird_t nsfs_t:file getattr;
+
+allow thunderbird_t { thunderbird_tmp_t thunderbird_xdg_cache_t }:file map;
+allow thunderbird_t thunderbird_tmpfs_t:file { execute mounton };
+allow thunderbird_t thunderbird_tmpfs_t:dir create;
+
+allow thunderbird_t self:process { setrlimit getcap };
+allow thunderbird_t self:cap_userns sys_ptrace;
+allow thunderbird_t self:netlink_route_socket nlmsg_write;
+
+allow thunderbird_t cgroup_t:file { getattr read open };
+allow thunderbird_t sysctl_fs_t:dir search;
+allow thunderbird_t pulseaudio_xdg_config_t:dir search;
+allow thunderbird_t pulseaudio_tmp_t:dir { getattr read rmdir open };
+allow thunderbird_t random_device_t:chr_file getattr;
+allow thunderbird_t node_t:udp_socket node_bind;
+
+allow thunderbird_t bin_t:file { execute getattr };
+allow thunderbird_t thunderbird_tmpfs_t:dir mounton;
+
+allow thunderbird_t dri_device_t:chr_file { read write open ioctl map getattr };
+allow thunderbird_t dma_device_t:chr_file { read write open };
+
+# type transition for xdg-open (attachments)
+allow thunderbird_t xdg_open_exec_t:file { getattr open read execute map };
+type_transition thunderbird_t xdg_open_exec_t:process staff_t;
+allow thunderbird_t staff_t:process transition;
+
+# staff permissions for the transition
+allow staff_t thunderbird_t:fd use;
+allow staff_t thunderbird_t:fifo_file { read write getattr };
+allow staff_t thunderbird_t:process sigchld;
+allow staff_t xdg_open_exec_t:file { entrypoint read execute getattr open map };
+
+alsa_read_config(thunderbird_t)
+
+dev_read_sound(thunderbird_t)
+dev_read_sysfs(thunderbird_t)
+
+fs_read_cgroup_symlinks(thunderbird_t)
+
+gnome_mmap_read_xdg_config_files(thunderbird_t)
+gnome_watch_xdg_config_dirs(thunderbird_t)
+
+logging_create_devlog(thunderbird_t)
+logging_manage_runtime_sockets(thunderbird_t)
+
+systemd_connect_machined(thunderbird_t)
+
+files_map_var_lib_files(thunderbird_t)
+files_read_var_lib_files(thunderbird_t)
+files_map_etc_files(thunderbird_t)
+files_watch_etc_dirs(thunderbird_t)
+files_watch_usr_dirs(thunderbird_t)
+files_watch_var_lib_dirs(thunderbird_t)
+
+init_unix_dgram_socket_sendto(thunderbird_t)
+
+xdg_read_config_files(thunderbird_t)
+xdg_manage_config(thunderbird_t)
+xdg_watch_config_dirs(thunderbird_t)
+xdg_watch_data_dirs(thunderbird_t)
+corecmd_exec_bin(thunderbird_t)
+
+kernel_read_device_sysctls(thunderbird_t)
+libs_exec_lib_files(thunderbird_t)
+ntp_dbus_chat(thunderbird_t)
+systemd_dbus_chat_logind(thunderbird_t)
+xserver_rw_mesa_shader_cache(thunderbird_t)
+
+bubblewrap_exec(thunderbird_t)

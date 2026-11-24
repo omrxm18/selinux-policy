@@ -165,6 +165,9 @@ gen_require(`
     class unix_stream_socket { bind connectto create getattr ioctl listen read setattr setopt write };
 ')
 
+type xdg_open_exec_t;
+corecmd_executable_file(xdg_open_exec_t)
+
 #============= auditd_t ==============
 allow auditd_t systemd_machined_t:unix_stream_socket connectto;
 allow auditd_t systemd_userdbd_runtime_t:sock_file read;
