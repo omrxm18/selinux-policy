@@ -136,6 +136,11 @@ gen_require(`
     type alsa_etc_t;
     type v4l_device_t;
     type wireplumber_t;
+    type staff_git_t;
+    type gpg_agent_t;
+    type gpg_exec_t;
+    type sysfs_t;
+    type wayland_runtime_t;
 
     class capability setuid;
     class capability2 { checkpoint_restore perfmon };
@@ -257,9 +262,12 @@ init_get_system_status(system_dbusd_t)
 
 #============== gpg_* ==============
 allow gpg_t self:unix_stream_socket connectto;
+allow gpg_t { gpg_runtime_t gpg_secret_t }:dir watch;
+allow gpg_t staff_git_t:fifo_file ioctl;
+allow gpg_agent_t gpg_exec_t:file { execute execute_no_trans };
 allow gpg_pinentry_t staff_wm_t:unix_stream_socket connectto;
 allow gpg_pinentry_t gpg_t:dir search;
-allow gpg_pinentry_t xdg_config_t:file { getattr open read };
+allow gpg_pinentry_t xdg_config_t:file { getattr open read write };
 allow gpg_pinentry_t user_home_t:lnk_file read;
 allow gpg_pinentry_t user_home_t:dir search;
 allow gpg_pinentry_t self:process execmem;
@@ -267,6 +275,18 @@ allow gpg_pinentry_t etc_runtime_t:file read;
 allow gpg_pinentry_t gnome_xdg_config_t:dir search;
 allow gpg_pinentry_t session_dbusd_runtime_t:sock_file write;
 allow gpg_pinentry_t etc_runtime_t:file open;
+allow gpg_pinentry_t gpg_t:file { read open getattr };
+allow gpg_pinentry_t wm_tmpfs_t:file map;
+allow gpg_pinentry_t staff_systemd_t:unix_stream_socket ioctl;
+allow gpg_pinentry_t staff_systemd_t:fd use;
+allow gpg_pinentry_t sysfs_t:file read;
+allow gpg_pinentry_t wayland_runtime_t:sock_file write;
+allow gpg_pinentry_t staff_systemd_t:unix_stream_socket { read write };
+allow gpg_pinentry_t staff_wm_t:fd use;
+gpg_entry_type(gpg_agent_t)
+dev_read_sysfs(gpg_pinentry_t)
+files_read_var_lib_files(gpg_pinentry_t)
+userdom_list_user_home_content(gpg_pinentry_t)
 
 #============= devicekit_disk_t ==============
 allow devicekit_disk_t staff_systemd_t:dbus send_msg;
