@@ -18,7 +18,6 @@ gen_require(`
     class process execmem;
     class dbus send_msg;
     class system reload;
-    class bpf { prog_run prog_load };
     class capability2 perfmon;
 ')
 
