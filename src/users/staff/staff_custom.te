@@ -323,8 +323,14 @@ allow staff_t xdg_cache_t:file execute;
 dev_rw_generic_usb_dev(staff_t)
 systemd_connect_machined(staff_t)
 
-allow staff_t code_exec_t:file { execute execute_no_trans getattr lock map open read write };
-allow staff_t code_exec_t:dir { getattr open read search };
+allow staff_t code_exec_t:file { 
+    execute execute_no_trans getattr lock map open
+    read write create
+};
+allow staff_t code_exec_t:dir {
+    getattr open read search add_name remove_name write
+    unlink rename setattr
+};
 
 #============== staff_dbusd_t ==============
 allow staff_dbusd_t staff_wm_t:fd use;
