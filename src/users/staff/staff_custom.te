@@ -288,18 +288,20 @@ allow staff_t git_home_t:dir watch;
 allow staff_t ld_so_cache_t:file unlink;
 allow staff_t ldconfig_cache_t:dir { add_name remove_name write };
 allow staff_t ldconfig_cache_t:file { create map open read rename unlink write };
-allow staff_t locale_t:dir watch;
-allow staff_t locale_t:file watch;
+allow staff_t locale_t:{ dir file } watch;
 allow staff_t mnt_t:dir write;
 allow staff_t mount_runtime_t:file { open read watch };
 allow staff_t node_t:tcp_socket node_bind;
 allow { staff_dbusd_t user_dbusd_t } var_lib_t:dir watch;
 allow staff_t systemd_user_tmpfs_t:file ioctl;
+
 allow staff_t self:cap_userns { sys_admin sys_chroot };
 allow staff_t self:capability { chown kill };
 allow staff_t self:io_uring allowed;
-allow staff_t self:process { execmem ptrace };
 allow staff_t self:user_namespace create;
+
+# used allow_execmem, allow_ptrace tunables instead of raw rules
+
 allow staff_t ssh_home_t:file watch;
 allow staff_t sysctl_vm_t:file { getattr open read };
 allow staff_t systemd_user_runtime_t:file map;
