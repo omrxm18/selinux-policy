@@ -139,6 +139,9 @@ gen_require(`
 	class shm { associate getattr read unix_read unix_write write };
 ')
 
+type code_exec_t;
+files_type(code_exec_t)
+
 allow staff_wm_t xdg_data_t:dir { add_name getattr open read remove_name search write };
 allow staff_wm_t xdg_data_t:file {
 	create getattr link lock map open read rename setattr
@@ -317,6 +320,9 @@ allow staff_t git_home_t:file map;
 allow staff_t xdg_cache_t:file execute;
 dev_rw_generic_usb_dev(staff_t)
 systemd_connect_machined(staff_t)
+
+allow staff_t code_exec_t:file { execute execute_no_trans getattr lock map open read write };
+allow staff_t code_exec_t:dir { getattr open read search };
 
 #============== staff_dbuds_t ==============
 allow staff_dbusd_t staff_wm_t:fd use;

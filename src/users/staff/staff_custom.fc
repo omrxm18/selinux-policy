@@ -1,0 +1,2 @@
+HOME_DIR/\.config/Code/User/globalStorage/[^/]+(/.*)?              gen_context(system_u:object_r:user_code_exec_t,s0)
+HOME_DIR/\.config/VSCodium/User/globalStorage/[^/]+(/.*)?          gen_context(system_u:object_r:user_code_exec_t,s0)
