@@ -57,8 +57,8 @@ gen_require(`
 	type bluetooth_t;
 	type user_tmpfs_t;
 	type accountsd_var_lib_t;
-	type etc_t, usr_t, bin_t, lib_t, mnt_t;
-	type var_t, var_run_t, var_lib_t, var_log_t;
+	type bin_t, etc_t, lib_t, mnt_t, usr_t;
+	type var_lib_t, var_log_t, var_run_t, var_t;
 	type init_t;
 	type cert_t;
 	type nsfs_t;
@@ -103,17 +103,18 @@ gen_require(`
 	};
 
 	class sock_file {
-		getattr read write create unlink
+		create getattr read unlink write
 	};
 
 	class dir {
-		add_name create getattr mounton open read
-		remove_name rmdir search setattr watch write
+		add_name create getattr mounton open read remove_name
+		rmdir search setattr watch write
 	};
 
 	class file {
-		append create execmod execute execute_no_trans getattr ioctl
-		link lock map mounton open read rename setattr unlink watch write
+		append create execmod execute execute_no_trans getattr
+		ioctl link lock map mounton open read rename setattr
+		unlink watch write
 	};
 
 	class process { execmem getcap getsched ptrace sigchld signal transition };
@@ -121,32 +122,38 @@ gen_require(`
 	class cap_userns { sys_admin sys_chroot };
 	class tcp_socket { name_bind name_connect node_bind };
 	class fd use;
-	class system { start status reload };
+	class system { reload start status };
 	class dbus send_msg;
 	class user_namespace create;
 	class io_uring allowed;
 	class unix_dgram_socket sendto;
 	class filesystem { mount unmount };
 	class process2 { nnp_transition nosuid_transition };
-	class service { status start };
-	class fifo_file { write getattr read ioctl };
-	class netlink_route_socket { read write };
+	class service { start status };
+	class fifo_file { getattr ioctl read write };
 	class unix_stream_socket { connectto getattr ioctl read write };
 	class security { read_policy setenforce };
-	class tcp_socket { node_bind name_bind };
 	class udp_socket { name_bind };
-	class capability { net_admin chown kill };
-	class lnk_file { getattr read  watch create setattr };
-	class process { execmem getcap ptrace transition sigchld };
+	class capability { chown kill net_admin };
+	class lnk_file { create getattr read setattr watch };
 	class shm { associate getattr read unix_read unix_write write };
 ')
 
 allow staff_wm_t xdg_data_t:dir { add_name getattr open read remove_name search write };
-allow staff_wm_t xdg_data_t:file { create getattr link lock map open read rename setattr unlink write };
+allow staff_wm_t xdg_data_t:file {
+	create getattr link lock map open read rename setattr
+	unlink write
+};
 allow staff_wm_t xdg_data_t:lnk_file read;
-allow staff_wm_t xdg_config_t:file { create getattr link lock open read rename setattr unlink write };
+allow staff_wm_t xdg_config_t:file {
+	create getattr link lock open read rename setattr unlink
+	write
+};
 allow staff_wm_t xdg_cache_t:dir rmdir;
-allow staff_wm_t xdg_cache_t:file { create getattr lock map open read watch write link rename setattr unlink execute };
+allow staff_wm_t xdg_cache_t:file {
+	create execute getattr link lock map open read rename
+	setattr unlink watch write
+};
 
 allow staff_wm_t user_home_t:lnk_file read;
 allow staff_wm_t systemd_user_tmpfs_t:file { getattr map read write };
@@ -181,11 +188,13 @@ allow staff_wm_t var_run_t:dir watch;
 allow staff_wm_t init_runtime_t:dir search;
 allow staff_wm_t init_t:fd use;
 
-allow staff_wm_t bubblewrap_exec_t:file { execute execute_no_trans map open read };
+allow staff_wm_t bubblewrap_exec_t:file { execute map open read };
 allow staff_wm_t cgroup_t:dir { search setattr write };
 allow staff_wm_t cgroup_t:file { getattr open read write };
 allow staff_wm_t chromium_xdg_config_t:dir { add_name getattr open read remove_name search write };
-allow staff_wm_t chromium_xdg_config_t:file { create getattr open read rename setattr unlink write };
+allow staff_wm_t chromium_xdg_config_t:file {
+	create getattr open read rename setattr unlink write
+};
 allow staff_wm_t devpts_t:filesystem mount;
 allow staff_wm_t etc_t:dir watch;
 allow staff_wm_t etc_t:file map;
@@ -255,7 +264,7 @@ systemd_user_manager_dbus_chat(staff, sysadm_t)
 systemd_user_manager_system_status(staff, sysadm_t)
 
 allow staff_dbusd_t staff_systemd_t:system reload;
-allow staff_wm_t staff_systemd_t:system { status reload start };
+allow staff_wm_t staff_systemd_t:system { reload start status };
 
 # kwin/WM session needs to talk to systemd (init_t) over D-Bus
 allow staff_wm_t init_t:dbus send_msg;
