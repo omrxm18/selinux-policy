@@ -50,7 +50,6 @@ gen_require(`
 	class dbus send_msg;
 	class unix_dgram_socket sendto;
 	class unix_stream_socket connectto;
-	class cap_userns { net_admin setpcap sys_admin sys_ptrace };
 	class netlink_route_socket nlmsg_write;
 	class user_namespace create;
 	class process2 { nnp_transition nosuid_transition };
@@ -79,7 +78,6 @@ allow user_wm_t init_t:unix_dgram_socket sendto;
 allow user_wm_t lib_t:file execute_no_trans;
 allow user_wm_t nsfs_t:file getattr;
 allow user_wm_t root_t:dir mounton;
-allow user_wm_t self:cap_userns { net_admin setpcap sys_admin sys_ptrace };
 allow user_wm_t self:netlink_route_socket nlmsg_write;
 allow user_wm_t self:user_namespace create;
 allow user_wm_t sysctl_dev_t:dir search;
