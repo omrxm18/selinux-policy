@@ -326,10 +326,12 @@ systemd_connect_machined(staff_t)
 allow staff_t code_exec_t:file { execute execute_no_trans getattr lock map open read write };
 allow staff_t code_exec_t:dir { getattr open read search };
 
-#============== staff_dbuds_t ==============
+#============== staff_dbusd_t ==============
 allow staff_dbusd_t staff_wm_t:fd use;
 allow staff_dbusd_t user_runtime_t:dir { watch write };
 allow staff_dbusd_t xauth_home_t:file { open read };
+policykit_get_unit_status(system_dbusd_t)
+systemd_status_power_units(system_dbusd_t)
 
 #============== staff_git_t ==============
 allow staff_git_t mnt_t:dir { getattr search };
@@ -344,13 +346,17 @@ allow staff_git_t gpg_secret_t:file { read write };
 allow staff_git_t user_tmpfs_t:file { read write };
 allow staff_git_t xdg_data_t:dir search;
 allow staff_git_t xdg_data_t:file append;
-allow staff_git_t gpg_secret_t:dir { search getattr write add_name };
+allow staff_git_t xdg_cache_t:dir write;
+allow staff_git_t xdg_cache_t:file { append getattr open read };
+allow staff_git_t xdg_cache_t:lnk_file { getattr unlink };
+allow staff_git_t gpg_secret_t:dir { add_name getattr search write };
 allow staff_git_t gpg_t:process transition;
 allow staff_git_t gpg_runtime_t:dir getattr;
 allow staff_git_t gpg_t:process { rlimitinh siginh noatsecure };
 
 allow staff_git_t self:io_uring allowed;
 allow staff_git_t self:process execmem;
+allow staff_git_t self:unix_dgram_socket { create ioctl };
 
 type_transition staff_git_t gpg_exec_t:process gpg_t;
 
