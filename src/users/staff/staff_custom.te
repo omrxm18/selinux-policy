@@ -254,7 +254,9 @@ allow staff_sudo_t systemd_userdbd_runtime_t:lnk_file read;
 allow staff_sudo_t systemd_userdbd_runtime_t:sock_file { getattr read write };
 allow staff_sudo_t lxc_t:process signal;
 allow staff_sudo_t xdm_t:unix_stream_socket connectto;
-allow staff_sudo_t self:capability net_admin;
+
+# sudo: setsockopt(SO_SNBUFFORCE) fails harmlessly
+dontaudit staff_sudo_t self:capability net_admin;
 
 #============= staff_u cross-role integration ==============
 # sudo switches to sysadm_t, which must still reach the staff user
