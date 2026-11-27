@@ -82,7 +82,7 @@ allow tailscaled_t self:netlink_route_socket create_netlink_socket_perms;
 allow tailscaled_t self:netlink_netfilter_socket create_socket_perms;
 allow tailscaled_t self:netlink_generic_socket { bind create getattr getopt read setopt write };
 allow tailscaled_t self:fifo_file { getattr write read };
-allow tailscaled_t self:rawip_socket create;
+allow tailscaled_t self:rawip_socket { create read write setopt };
 
 manage_dirs_pattern(tailscaled_t, tailscaled_runtime_t, tailscaled_runtime_t)
 manage_sock_files_pattern(tailscaled_t, tailscaled_runtime_t, tailscaled_runtime_t)
@@ -145,8 +145,6 @@ allow tailscaled_t virt_etc_t:dir { getattr open read search watch watch_reads }
 allow tailscaled_t wireguard_etc_t:dir { getattr open read search watch watch_reads };
 allow tailscaled_t wireguard_etc_t:file getattr;
 allow tailscaled_t NetworkManager_t:dbus send_msg;
-allow tailscaled_t kernel_t:system module_request;
-allow tailscaled_t kmod_exec_t:file { read open execute };
 
 alsa_read_config(tailscaled_t)
 apache_exec_modules(tailscaled_t)
@@ -205,3 +203,4 @@ systemd_getattr_updated_runtime(tailscaled_t)
 systemd_read_user_runtime_units_files(tailscaled_t)
 virt_read_config(tailscaled_t)
 xserver_xsession_entry_type(tailscaled_t)
+modutils_domtrans(tailscaled_t)
